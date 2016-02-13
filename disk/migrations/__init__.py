@@ -1,0 +1,1 @@
+# Copyright (c) Timur Iskhakov.

@@ -1,3 +1,4 @@
-from django.test import TestCase
+# Copyright (c) Timur Iskhakov.
 
-# Create your tests here.
+
+from django.test import TestCase

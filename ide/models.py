@@ -1,3 +1,4 @@
-from django.db import models
+# Copyright (c) Timur Iskhakov.
 
-# Create your models here.
+
+from django.db import models

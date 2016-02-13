@@ -1,3 +1,4 @@
-from django.shortcuts import render
+# Copyright (c) Timur Iskhakov.
 
-# Create your views here.
+
+from django.shortcuts import render

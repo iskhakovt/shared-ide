@@ -1,3 +1,4 @@
-from django.contrib import admin
+# Copyright (c) Timur Iskhakov.
 
-# Register your models here.
+
+from django.contrib import admin

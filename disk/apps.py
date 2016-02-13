@@ -1,3 +1,6 @@
+# Copyright (c) Timur Iskhakov.
+
+
 from django.apps import AppConfig
 
 

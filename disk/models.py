@@ -22,16 +22,20 @@ FILE_EXTENSIONS = (
 class File(models.Model):
     name = models.CharField(max_length=30)
     type = models.CharField(max_length=3, choices=FILE_EXTENSIONS)
-    # creator = models.ForeignKey(User)
-    # editors = models.ManyToManyField(User)
 
     # lots of stuff is coming
-    # creation_time = models.DateField(default=timezone.now)
+
+    file = models.FileField(storage=fs)
+
+    class Meta:
+        permissions = (
+            ("view", "Can view the file"),
+            ("comment", "Can comment the file"),
+            ("edit", "Can edit the file"),
+        )
 
     def get_full_name(self):
         return self.name + '.' + self.type
-
-    file = models.FileField(storage=fs)
 
     def __str__(self):
         return self.get_full_name()

@@ -2,12 +2,12 @@
 
 
 import os
-import react
+from react import jsx
 import subprocess
 
 
 def build_jsx():
-    transformer = react.jsx.JSXTransformer()
+    transformer = jsx.JSXTransformer()
     for file in jsx_files:
         dir_name = os.path.dirname(file)
         name, extension = os.path.splitext(os.path.basename(file))

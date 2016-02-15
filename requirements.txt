@@ -1,0 +1,4 @@
+Django >= 1.9
+PyReact >= 0.6
+react >= 2
+yuicompressor >= 2

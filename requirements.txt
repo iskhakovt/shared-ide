@@ -1,4 +1,10 @@
+celery >= 3.1
 Django >= 1.9
-PyReact >= 0.6
+django-celery >= 3.1
+django-redis-sessions >= 0.5
+django-socket-server >= 0.0.4
+django-websocket-redis >= 0.4
 react >= 2
+redis >= 2.10
+PyReact >= 0.6
 yuicompressor >= 2

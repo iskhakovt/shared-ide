@@ -6,6 +6,8 @@ from subprocess import call
 
 
 def build_jsx():
+    print('Building JS src...')
+
     for file in js_files:
         name, extension = path.splitext(path.basename(file))
         tmp = 'src/js/' + name + '-build.js'
@@ -33,4 +35,5 @@ js_files = [
     'disk.jsx',
     'editor.js',
     'ide.jsx',
+    'socket.js',
 ]

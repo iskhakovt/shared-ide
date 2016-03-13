@@ -1,9 +1,15 @@
+/**
+ * Copyright (c) Timur Iskhakov.
+ */
+
+
 import React from 'react'
 import _ from 'lodash'
 import ace from 'brace'
 import 'brace/theme/solarized_light'
 import 'brace/mode/javascript'
 import 'brace/ext/language_tools'
+
 
 const AceEditor = React.createClass({
   propTypes: {
@@ -23,6 +29,7 @@ const AceEditor = React.createClass({
     selectFirstLine: React.PropTypes.bool,
     wrapEnabled: React.PropTypes.bool
   },
+
   getDefaultProps() {
     return {
       name: 'brace-editor',
@@ -42,12 +49,14 @@ const AceEditor = React.createClass({
       wrapEnabled: false
     };
   },
+
   onChange() {
     if (this.props.onChange) {
       const value = this.editor.getValue();
       this.props.onChange(value);
     }
   },
+
   componentDidMount() {
     this.editor = ace.edit(this.props.name);
     this.editor.$blockScrolling = Infinity;
@@ -110,7 +119,7 @@ const AceEditor = React.createClass({
   render() {
     return React.DOM.div({
       id: this.props.name,
-      onChange: this.onChange,
+      onChange: this.onChange
     });
   }
 });

@@ -66,7 +66,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'shared_ide.wsgi.application'
+WSGI_APPLICATION = 'ws4redis.django_runserver.application'
 
 
 # Database

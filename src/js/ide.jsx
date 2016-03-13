@@ -1,8 +1,13 @@
+/**
+ * Copyright (c) Timur Iskhakov.
+ */
+
 import React from 'react'
 import ReactDOM from 'react-dom'
 import _ from 'lodash'
 
 import AceEditor from './editor-build'
+
 
 class Editor extends React.Component {
   constructor(props, context) {
@@ -10,8 +15,7 @@ class Editor extends React.Component {
     this.state = {
       value: 'function f() {\n    console.log(\'hello world\');\n}',
       theme: 'solarized_light',
-      fontSize: 12,
-      height: '20em'
+      fontSize: 12
     };
   }
 
@@ -35,6 +39,7 @@ class Editor extends React.Component {
     );
   };
 }
+
 
 ReactDOM.render(
   <Editor />,

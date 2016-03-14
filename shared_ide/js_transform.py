@@ -11,6 +11,7 @@ def build_jsx():
     for file in js_files:
         name, extension = path.splitext(path.basename(file))
         tmp = 'src/js/' + name + '-build.js'
+
         call([
             'babel',
             'src/js/' + file,
@@ -29,6 +30,8 @@ def build_jsx():
             '-o',
             out,
         ])
+
+    print()
 
 
 js_files = [

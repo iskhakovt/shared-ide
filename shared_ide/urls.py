@@ -13,6 +13,6 @@ js_transform.build_jsx()
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^disk/', disk_views.index),
-    url(r'^ide/', ide_views.index),
+    url(r'^ide/(?P<document>)', ide_views.index),
     url(r'accounts/', include('django.contrib.auth.urls')),
 ]

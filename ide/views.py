@@ -4,5 +4,5 @@
 from django.shortcuts import render
 
 
-def index(request):
+def index(request, document):
     return render(request, 'ide.html')

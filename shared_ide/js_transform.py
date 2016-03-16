@@ -1,28 +1,74 @@
 # Copyright (c) Timur Iskhakov.
 
 
+import hashlib
+import json
 from os import path
 from subprocess import call
+
+
+def hash_file(path):
+    hasher = hashlib.md5()
+    with open(path, 'rb') as afile:
+        buf = afile.read()
+        hasher.update(buf)
+
+    return hasher.hexdigest()
+
+
+class HashSaver:
+    def __init__(self, hash_file):
+        self.file_path = hash_file
+
+        try:
+            with open(self.file_path) as file:
+                self.hashes = json.load(file)
+        except FileNotFoundError:
+            self.hashes = {}
+
+    def get(self, key):
+        return self.hashes[key] if key in self.hashes else None
+
+    def insert(self, key, value):
+        self.hashes[key] = value
+
+    def flush(self):
+        with open(self.file_path, 'w') as file:
+            file.write(json.dumps(self.hashes))
 
 
 def build_jsx():
     print('Building JS src...')
 
-    for file in js_files:
+    saver = HashSaver(HASH_PATH)
+
+    for file in JS_FILES:
+        file_path = 'src/js/' + file
         name, extension = path.splitext(path.basename(file))
         tmp = 'src/js/' + name + '-build.js'
 
+        file_hash, saved_hash = hash_file(file_path), saver.get(file)
+        if file_hash == saved_hash:
+            continue
+
         call([
             'babel',
-            'src/js/' + file,
+            file_path,
             '-o',
             tmp,
         ])
 
-    for file in js_files:
+    for file in JS_FILES:
+        file_path = 'src/js/' + file
         name, extension = path.splitext(path.basename(file))
         tmp = 'src/js/' + name + '-build.js'
         out = 'static/' + name + '.js'
+
+        file_hash, saved_hash = hash_file(file_path), saver.get(file)
+        if file_hash == saved_hash:
+            continue
+        else:
+            saver.insert(file, file_hash)
 
         call([
             'browserify',
@@ -31,10 +77,13 @@ def build_jsx():
             out,
         ])
 
+    saver.flush()
     print()
 
 
-js_files = [
+HASH_PATH = 'js_build_hash.json'
+
+JS_FILES = [
     'disk.jsx',
     'editor.js',
     'ide.jsx',

@@ -7,6 +7,6 @@ from .docker import Docker
 
 def index(request, document):
     docker = Docker()
-    Docker.run.delay(docker)
+    docker.run.delay()
 
     return render(request, 'ide.html')

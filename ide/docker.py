@@ -1,14 +1,16 @@
 # Copyright (c) Timur Iskhakov.
 
 
+from __future__ import absolute_import
+
+from shared_ide.celery import app
 from celery.contrib.methods import task_method
-from celery import shared_task
 
 
 class Docker:
     def __init__(self):
         pass
 
-    @shared_task(filter=task_method, bind=True)
+    @app.task(filter=task_method, bind=True)
     def run(self):
         pass

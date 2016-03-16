@@ -9,7 +9,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'shared_ide.settings')
 
 from django.conf import settings
 
-app = Celery('shared_id')
+app = Celery('shared_ide')
 
 # Using a string here means the worker will not have to
 # pickle the object when using Windows.

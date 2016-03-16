@@ -11,27 +11,10 @@ import 'brace/mode/javascript'
 import 'brace/ext/language_tools'
 
 
-const AceEditor = React.createClass({
-  propTypes: {
-    mode: React.PropTypes.string,
-    theme: React.PropTypes.string,
-    name: React.PropTypes.string,
-    fontSize: React.PropTypes.number,
-    showGutter: React.PropTypes.bool,
-    onChange: React.PropTypes.func,
-    defaultValue: React.PropTypes.string,
-    value: React.PropTypes.string,
-    onLoad: React.PropTypes.func,
-    maxLines: React.PropTypes.number,
-    readOnly: React.PropTypes.bool,
-    highlightActiveLine: React.PropTypes.bool,
-    showPrintMargin: React.PropTypes.bool,
-    selectFirstLine: React.PropTypes.bool,
-    wrapEnabled: React.PropTypes.bool
-  },
-
-  getDefaultProps() {
-    return {
+class AceEditor extends React.Component {
+  constructor(props, context) {
+    super(props, context);
+    this.state = {
       name: 'brace-editor',
       mode: '',
       theme: '',
@@ -39,7 +22,6 @@ const AceEditor = React.createClass({
       value: '',
       fontSize: 12,
       showGutter: true,
-      onChange: null,
       onLoad: null,
       maxLines: null,
       readOnly: false,
@@ -48,14 +30,7 @@ const AceEditor = React.createClass({
       selectFirstLine: false,
       wrapEnabled: false
     };
-  },
-
-  onChange() {
-    if (this.props.onChange) {
-      const value = this.editor.getValue();
-      this.props.onChange(value);
-    }
-  },
+  }
 
   componentDidMount() {
     this.editor = ace.edit(this.props.name);
@@ -63,7 +38,6 @@ const AceEditor = React.createClass({
     this.editor.getSession().setMode('ace/mode/' + this.props.mode);
     this.editor.setTheme('ace/theme/' + this.props.theme);
     this.editor.setFontSize(this.props.fontSize);
-    this.editor.on('change', this.onChange);
     this.editor.setValue(this.props.defaultValue || this.props.value, (this.props.selectFirstLine === true ? -1 : null));
     this.editor.setOption('maxLines', this.props.maxLines);
     this.editor.setOption('readOnly', this.props.readOnly);
@@ -72,10 +46,14 @@ const AceEditor = React.createClass({
     this.editor.getSession().setUseWrapMode(this.props.wrapEnabled);
     this.editor.renderer.setShowGutter(this.props.showGutter);
 
+    if (this.props.onChange) {
+      this.editor.on('change', (e) => this.props.onChange(e.start, e.lines, this.editor.getValue()));
+    }
+
     if (this.props.onLoad) {
       this.props.onLoad(this.editor);
     }
-  },
+  }
 
   componentWillReceiveProps(nextProps) {
     let currentRange = this.editor.selection.getRange();
@@ -114,7 +92,7 @@ const AceEditor = React.createClass({
     if (nextProps.showGutter !== this.props.showGutter) {
       this.editor.renderer.setShowGutter(nextProps.showGutter);
     }
-  },
+  }
 
   render() {
     return React.DOM.div({
@@ -122,6 +100,6 @@ const AceEditor = React.createClass({
       onChange: this.onChange
     });
   }
-});
+}
 
 export default AceEditor;

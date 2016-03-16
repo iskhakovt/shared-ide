@@ -10,10 +10,10 @@
   <body>
     <div id="root"></div>
 
+    <input type="hidden" id="user" value="{{ request.user }}" />
     <input type="hidden" id="websocket_uri" value="{{ WEBSOCKET_URI }}" />
-    <input type="hidden" id="websocket_heartbeat" value="{{ WS4REDIS_HEARTBEAT }}" />
+    <input type="hidden" id="websocket_heartbeat" value={{ WS4REDIS_HEARTBEAT }} />
 
-    <script src="//code.jquery.com/jquery-1.12.0.min.js"></script>
     <script src="{% static "js/ws4redis.js" %}" type="text/javascript" charset="utf-8"></script>
     <script src="{% static "ide.js" %}" type="text/javascript" charset="utf-8"></script>
   </body>

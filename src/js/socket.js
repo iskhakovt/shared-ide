@@ -3,6 +3,8 @@
  */
 
 
+import $ from 'jquery'
+
 var loc = location.href;
 loc = loc.lastIndexOf('/') == (loc.length - 1) ? loc.substr(0,loc.length - 1) : loc;
 var document = loc.substr(loc.lastIndexOf('/') + 1);
@@ -20,8 +22,8 @@ function encodeData(data) {
 
 
 var group_args = encodeData({
-  'subscribe-group': document,
-  'publish-group': document,
+  'subscribe-broadcast': null,
+  'publish-broadcast': null,
   'echo': null
 });
 
@@ -32,18 +34,20 @@ var user_args = encodeData({
 });
 
 
-function group_socket(uri, heartbeat) {
+function group_socket(uri, heartbeat, receive_message) {
   return new WS4Redis({
-    uri: uri + 'editor?' + group_args,
-    heartbeat_msg: heartbeat
-  });
+    uri: uri + document + '?' + group_args,
+    heartbeat_msg: heartbeat,
+    receive_message: receive_message
+  }, $);
 }
 
-function user_socket(uri, heartbeat) {
+function user_socket(uri, heartbeat, receive_message) {
   return WS4Redis({
-    uri: uri + 'editor?' + user_args,
-    heartbeat_msg: heartbeat
-  });
+    uri: uri + document + '?' + user_args,
+    heartbeat_msg: heartbeat,
+    receive_message: receive_message
+  }, $);
 }
 
 module.exports = {

@@ -42,14 +42,14 @@ def build_jsx():
 
     saver = HashSaver(HASH_PATH)
 
+    if all([hash_file('src/js/' + file) == saver.get(file) for file in JS_FILES]):
+        print()
+        return
+
     for file in JS_FILES:
         file_path = 'src/js/' + file
         name, extension = path.splitext(path.basename(file))
         tmp = 'src/js/' + name + '-build.js'
-
-        file_hash, saved_hash = hash_file(file_path), saver.get(file)
-        if file_hash == saved_hash:
-            continue
 
         call([
             'babel',
@@ -65,10 +65,7 @@ def build_jsx():
         out = 'static/' + name + '.js'
 
         file_hash, saved_hash = hash_file(file_path), saver.get(file)
-        if file_hash == saved_hash:
-            continue
-        else:
-            saver.insert(file, file_hash)
+        saver.insert(file, file_hash)
 
         call([
             'browserify',

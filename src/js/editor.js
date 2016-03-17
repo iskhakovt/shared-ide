@@ -47,7 +47,12 @@ class AceEditor extends React.Component {
     this.editor.renderer.setShowGutter(this.props.showGutter);
 
     if (this.props.onChange) {
-      this.editor.on('change', (e) => this.props.onChange(e.start, e.lines, this.editor.getValue()));
+      this.editor.on('change', (e) => {
+        /* Check that the changes were made by user */
+        if (this.editor.curOp && this.editor.curOp.command.name) {
+          this.props.onChange(e);
+        }
+      });
     }
 
     if (this.props.onLoad) {
@@ -74,16 +79,16 @@ class AceEditor extends React.Component {
     if (nextProps.readOnly !== this.props.readOnly) {
       this.editor.setOption('readOnly', nextProps.readOnly);
     }
-    if (nextProps.highlightActiveLine !== this.props.highlightActiveLine) {
+    if (nextProps.highlightActiveLine !== null !== this.props.highlightActiveLine) {
       this.editor.setOption('highlightActiveLine', nextProps.highlightActiveLine);
     }
-    if (nextProps.setShowPrintMargin !== this.props.setShowPrintMargin) {
+    if (nextProps.setShowPrintMargin !== null !== this.props.setShowPrintMargin) {
       this.editor.setShowPrintMargin(nextProps.setShowPrintMargin);
     }
-    if (nextProps.wrapEnabled !== this.props.wrapEnabled) {
+    if (nextProps.wrapEnabled != null !== this.props.wrapEnabled) {
       this.editor.getSession().setUseWrapMode(nextProps.wrapEnabled);
     }
-    if (nextProps.value && this.editor.getValue() !== nextProps.value) {
+    if (nextProps.value !== null && this.editor.getValue() !== nextProps.value) {
       this.editor.setValue(nextProps.value, (this.props.selectFirstLine === true ? -1 : null));
       if (currentRange && typeof currentRange === "object") {
         this.editor.getSession().getSelection().setSelectionRange(currentRange);

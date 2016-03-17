@@ -6,6 +6,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import _ from 'lodash'
+import ot from 'ot'
 
 import AceEditor from './editor-build'
 import Socket from './socket-build'
@@ -16,7 +17,7 @@ class Editor extends React.Component {
     super(props, context);
     this.state = {
       user: null,
-      value: 'function f() {\n    console.log(\'hello world\');\n}',
+      value: '',
       theme: 'solarized_light',
       fontSize: 12,
       group_socket: null,
@@ -30,12 +31,12 @@ class Editor extends React.Component {
     this.state.group_socket = Socket.group_socket(
       this.props.websocket_uri,
       this.props.websocket_heartbeat,
-      this.groupMessage
+      (msg) => this.groupMessage(msg)
     );
     this.state.user_socket = Socket.user_socket(
       this.props.websocket_uri,
       this.props.websocket_heartbeat,
-      this.userMessage
+      (msg) => this.userMessage(msg)
     );
   }
 
@@ -54,29 +55,66 @@ class Editor extends React.Component {
         fontSize={this.state.fontSize}
         value={this.state.value}
         name="editor"
-        onChange={(pos, change, value) => this.onChange(pos, change, value)}
+        onChange={(e) => this.onChange(e)}
         group_socket={this.state.group_socket}
-        group_socket={this.state.user_socket}
+        user_socket={this.state.user_socket}
       />
     );
   };
 
-  onChange(pos, change, value) {
-    this.setState({value: value});
+  getAbsolutePos(pos) {
+    var lines = this.state.value.split('\n');
+    var abs_pos = pos.column;
+    for (var i = 0; i != pos.row; ++i) {
+      abs_pos += lines[i].length;
+    }
+    return abs_pos;
+  }
 
+  onChange(e) {
     this.state.group_socket.send_message(JSON.stringify({
       user: this.state.user,
-      pos: pos,
-      value: change.join('\n')
+      action: e.action,
+      start: e.start,
+      end: e.end,
+      change: e.lines.join('\n')
     }));
   };
 
   groupMessage(data) {
-    console.log('Group message ' + data);
+    var parsed = JSON.parse(data);
+    var operation;
+
+    console.log('Group message', parsed);
+
+    if (!('action' in parsed)) {
+      return;
+    }
+
+    if (parsed.action == 'insert') {
+      operation = new ot.TextOperation()
+        .retain(this.getAbsolutePos(parsed.start))
+        .insert(parsed.change)
+        .retain(this.state.value.length - this.getAbsolutePos(parsed.start));
+    } else if (parsed.action == 'remove') {
+      operation = new ot.TextOperation()
+        .retain(this.getAbsolutePos(parsed.start))
+        .delete(parsed.change)
+        .retain(this.state.value.length - this.getAbsolutePos(parsed.end));
+    } else {
+      return;
+    }
+
+    var updatedValue = operation.apply(this.state.value);
+    this.setState({
+      value: updatedValue
+    });
   }
 
   userMessage(data) {
-    console.log('User message ' + data);
+    var parsed = JSON.parse(data);
+
+    console.log('User message', parsed);
   }
 }
 

@@ -1,0 +1,19 @@
+{% load staticfiles %}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Shared IDE Log in</title>
+  </head>
+
+  <body>
+    <form method="post" action=".">
+      {% csrf_token %}
+      {{ form.as_p }}
+
+      <input type="submit" value="Log in" />
+      <input type="hidden" name="next" value="{{ next }}" />
+    </form>
+  </body>
+</html>

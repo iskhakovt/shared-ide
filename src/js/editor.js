@@ -79,13 +79,13 @@ class AceEditor extends React.Component {
     if (nextProps.readOnly !== this.props.readOnly) {
       this.editor.setOption('readOnly', nextProps.readOnly);
     }
-    if (nextProps.highlightActiveLine !== null !== this.props.highlightActiveLine) {
+    if (nextProps.highlightActiveLine !== this.props.highlightActiveLine) {
       this.editor.setOption('highlightActiveLine', nextProps.highlightActiveLine);
     }
-    if (nextProps.setShowPrintMargin !== null !== this.props.setShowPrintMargin) {
+    if (nextProps.setShowPrintMargin !== this.props.setShowPrintMargin) {
       this.editor.setShowPrintMargin(nextProps.setShowPrintMargin);
     }
-    if (nextProps.wrapEnabled != null !== this.props.wrapEnabled) {
+    if (nextProps.wrapEnabled !== this.props.wrapEnabled) {
       this.editor.getSession().setUseWrapMode(nextProps.wrapEnabled);
     }
     if (nextProps.value !== null && this.editor.getValue() !== nextProps.value) {

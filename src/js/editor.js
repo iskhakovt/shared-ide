@@ -90,7 +90,7 @@ class AceEditor extends React.Component {
     }
     if (nextProps.value !== null && this.editor.getValue() !== nextProps.value) {
       this.editor.setValue(nextProps.value, (this.props.selectFirstLine === true ? -1 : null));
-      if (currentRange && typeof currentRange === "object") {
+      if (currentRange && typeof currentRange === 'object') {
         this.editor.getSession().getSelection().setSelectionRange(currentRange);
       }
     }

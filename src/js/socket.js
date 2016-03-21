@@ -15,9 +15,9 @@ function encodeData(data) {
       if (!data[key]) {
         return key;
       } else {
-        return [key, data[key]].map(encodeURIComponent).join("=");
+        return [key, data[key]].map(encodeURIComponent).join('=');
       }
-    }).join("&");
+    }).join('&');
 }
 
 

@@ -50,11 +50,11 @@ class Editor extends React.Component {
   render() {
     return (
       <AceEditor
-        mode="javascript"
+        mode='javascript'
         theme={this.state.theme}
         fontSize={this.state.fontSize}
         value={this.state.value}
-        name="editor"
+        name='editor'
         onChange={(e) => this.onChange(e)}
         group_socket={this.state.group_socket}
         user_socket={this.state.user_socket}
@@ -66,7 +66,7 @@ class Editor extends React.Component {
     var lines = this.state.value.split('\n');
     var abs_pos = pos.column;
     for (var i = 0; i != pos.row; ++i) {
-      abs_pos += lines[i].length;
+      abs_pos += lines[i].length + 1;
     }
     return abs_pos;
   }

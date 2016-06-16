@@ -4,11 +4,21 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-      <title>Shared IDE</title>
-      <link rel="stylesheet" type="text/css" href="/static/styles/ide.css">
+    <title>Shared IDE</title>
+    <link rel="stylesheet" type="text/css" href="/static/styles/disk.css">
+    <link rel="stylesheet" type="text/css" href="/static/styles/loader.css">
+    <link rel="stylesheet" type="text/css" href="/static/styles/react-bootstrap-table-all.min.css">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap-theme.min.css" crossorigin="anonymous">
   </head>
   <body>
-    <div id="root"></div>
+    <input type="hidden" id="user" value="{{ request.user }}" />
+    <input type="hidden" id="file_extensions" value="{{ file_extensions }}" />
+
+    <div class="container">
+      <div id="root"></div>
+    </div>
     <script src="{% static "disk.js" %}" type="text/javascript" charset="utf-8"></script>
   </body>
 </html>

@@ -3,8 +3,13 @@
 
 from django.contrib import admin
 
-from .models import File, UserFiles
+from .models import Person, File
 
 
-admin.site.register(File)
-admin.site.register(UserFiles)
+class FileAdmin(admin.ModelAdmin):
+    list_display = ('name', 'type', 'creator', 'last_modified')
+    list_filter = ('last_modified',)
+
+
+admin.site.register(Person)
+admin.site.register(File, FileAdmin)

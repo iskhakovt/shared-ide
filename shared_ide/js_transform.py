@@ -85,4 +85,5 @@ JS_FILES = [
     'editor.js',
     'ide.jsx',
     'socket.js',
+    'new_file.jsx'
 ]

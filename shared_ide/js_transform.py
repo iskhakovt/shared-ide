@@ -6,6 +6,8 @@ import json
 from os import path
 from subprocess import call
 
+from .ui_progress_bar import UIProgressBar
+
 
 def hash_file(path):
     hasher = hashlib.md5()
@@ -46,6 +48,8 @@ def build_jsx():
         print()
         return
 
+    progressbar = UIProgressBar('babel')
+    progressbar.init(len(JS_FILES))
     for file in JS_FILES:
         file_path = 'src/js/' + file
         name, extension = path.splitext(path.basename(file))
@@ -57,7 +61,11 @@ def build_jsx():
             '-o',
             tmp,
         ])
+        progressbar.step()
+    progressbar.finish()
 
+    progressbar = UIProgressBar('browserify')
+    progressbar.init(len(JS_FILES))
     for file in JS_FILES:
         file_path = 'src/js/' + file
         name, extension = path.splitext(path.basename(file))
@@ -73,6 +81,8 @@ def build_jsx():
             '-o',
             out,
         ])
+        progressbar.step()
+    progressbar.finish()
 
     saver.flush()
     print()
@@ -85,5 +95,7 @@ JS_FILES = [
     'editor.js',
     'ide.js',
     'socket.js',
-    'new_file.js'
+    'new_file.js',
+    'login.js',
+    'registration.js',
 ]

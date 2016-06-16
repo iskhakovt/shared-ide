@@ -4,16 +4,31 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <title>Shared IDE Log in</title>
+    <title>Shared IDE Sign in</title>
+
+    <link rel="stylesheet" type="text/css" href="/static/styles/auth.css">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css" crossorigin="anonymous">
   </head>
 
   <body>
-    <form method="post" action=".">
-      {% csrf_token %}
-      {{ form.as_p }}
+    <div class="container">
+      <form class="form-auth" method="post" action=".">
+        {% csrf_token %}
 
-      <input type="submit" value="Log in" />
-      <input type="hidden" name="next" value="{{ next }}" />
-    </form>
+        <h2 class="form-auth-heading">Please sign in</h2>
+        <label for="id_username" class="sr-only">Username:</label>
+        <input id="id_username" maxlength="254" name="username" type="text" class="form-control username" placeholder="Login" required autofocus />
+        <label for="id_password" class="sr-only">Password:</label>
+        <input id="id_password" name="password" type="password" class="form-control" placeholder="Password" required />
+
+        <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+        <input type="hidden" name="next" id="next" value="" />
+      </form>
+
+      <h2 class="change-auth"><a href="/registration/" id="change-auth">Sign up</a></h2>
+    </div>
+
+    <script src="{% static "login.js" %}" type="text/javascript" charset="utf-8"></script>
   </body>
 </html>

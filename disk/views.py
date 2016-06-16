@@ -1,13 +1,25 @@
 # Copyright (c) Timur Iskhakov.
 
 
+from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 
 import json
 
 from disk.models import *
+
+
+def get_or_none(cls, **kwargs):
+    try:
+        return cls.objects.get(**kwargs)
+    except cls.DoesNotExist:
+        return None
+
+
+def intro(request):
+    return redirect(index)
 
 
 @login_required
@@ -79,10 +91,10 @@ def delete_file(request):
 
 
 def edit_permissions(request):
-    if 'file_id' not in request.POST or\
-            'user_id' not in request.POST or\
-            'access' not in request.POST:
-        return HttpResponseBadRequest()
+    required = ('file_id', 'user_id', 'access')
+    for field in required:
+        if field not in request.POST:
+            return HttpResponseBadRequest()
 
     if request.POST['access'] not in ('none', 'view', 'edit'):
         return HttpResponseBadRequest()
@@ -127,3 +139,30 @@ def get_permissions(request):
     edit = list(map(lambda p: (p.id, p.name), file.viewers.all()))
 
     return JsonResponse({'view': view, 'edit': edit})
+
+
+def registration(request):
+    print(request.method)
+
+    if request.method == 'GET':
+        return render(request, 'registration.html')
+    else:
+        required = ('username', 'password', 'email', 'first_name', 'last_name')
+        for field in required:
+            if field not in request.POST:
+                return HttpResponseBadRequest()
+
+        if get_or_none(User, username=request.POST['username']):
+            return HttpResponseBadRequest('username-exists')
+
+        User.objects.create_user(
+            **{field: request.POST[field] for field in request.POST}
+        )
+
+        user = authenticate(
+            username=request.POST['username'],
+            password=request.POST['password'],
+        )
+
+        login(request, user)
+        return HttpResponse(status=201)

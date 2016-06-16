@@ -32,14 +32,11 @@ class File(models.Model):
         'Person', related_name='editors', blank=True
     )
 
-    def get_full_name(self):
-        return '{}.{} ({})'.format(self.name, self.type, self.creator.username)
-
     def get_last_modified_date(self):
         return self.last_modified.strftime('%b %d, %Y').replace(' 0', '0')
 
     def __str__(self):
-        return self.get_full_name()
+        return '{}.{}'.format(self.name, self.type)
 
     @classmethod
     def create_empty(cls, name, type, creator):

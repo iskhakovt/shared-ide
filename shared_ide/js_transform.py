@@ -43,14 +43,18 @@ def build_jsx():
     print('Building JS src...')
 
     saver = HashSaver(HASH_PATH)
+    to_proceed = []
 
-    if all([hash_file('src/js/' + file) == saver.get(file) for file in JS_FILES]):
-        print()
-        return
+    for group in JS_FILES:
+        if all([hash_file('src/js/' + file) == saver.get(file) for file in group]):
+            print()
+            return
+        else:
+            to_proceed.extend(group)
 
     progressbar = UIProgressBar('babel')
-    progressbar.init(len(JS_FILES))
-    for file in JS_FILES:
+    progressbar.init(len(to_proceed))
+    for file in to_proceed:
         file_path = 'src/js/' + file
         name, extension = path.splitext(path.basename(file))
         tmp = 'src/js/' + name + '-build.js'
@@ -65,8 +69,8 @@ def build_jsx():
     progressbar.finish()
 
     progressbar = UIProgressBar('browserify')
-    progressbar.init(len(JS_FILES))
-    for file in JS_FILES:
+    progressbar.init(len(to_proceed))
+    for file in to_proceed:
         file_path = 'src/js/' + file
         name, extension = path.splitext(path.basename(file))
         tmp = 'src/js/' + name + '-build.js'
@@ -91,12 +95,7 @@ def build_jsx():
 HASH_PATH = 'js_build_hash.json'
 
 JS_FILES = [
-    'disk.js',
-    'editor.js',
-    'ide.js',
-    'socket.js',
-    'new_file.js',
-    'login.js',
-    'registration.js',
-    'edit_permissions.js',
+    ['disk.js', 'new_file.js', 'edit_permissions.js'],
+    ['editor.js', 'ide.js', 'socket.js'],
+    ['login.js', 'registration.js'],
 ]

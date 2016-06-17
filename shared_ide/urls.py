@@ -8,6 +8,8 @@ from ide import views as ide_views
 from shared_ide import js_transform
 
 
+admin.site.site_header = 'Shared IDE administration'
+
 js_transform.build_jsx()
 
 urlpatterns = [

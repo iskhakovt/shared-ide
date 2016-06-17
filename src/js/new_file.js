@@ -104,7 +104,7 @@ class NewFile extends React.Component {
                 placeholder="File type"
                 onChange={(e) => this.handleTypeChange(e)}
               >
-                <option disabled value="" />
+                <option disabled value="">File type</option>
                 {Object.keys(this.props.file_extensions).map((extension) => {
                   return <option key={extension} value={extension}>{this.props.file_extensions[extension]}</option>
                 })}

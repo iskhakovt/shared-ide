@@ -47,8 +47,7 @@ def build_jsx():
 
     for group in JS_FILES:
         if all([hash_file('src/js/' + file) == saver.get(file) for file in group]):
-            print()
-            return
+            continue
         else:
             to_proceed.extend(group)
 

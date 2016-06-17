@@ -8,9 +8,10 @@ import ReactDOM from 'react-dom'
 import $ from 'jquery'
 import Cookies from 'js-cookie'
 import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table';
-import { Button } from 'react-bootstrap';
+import { Alert, Button, ButtonGroup } from 'react-bootstrap';
 
 import NewFile from './new_file-build'
+import EditPermissions from './edit_permissions-build'
 
 
 var csrftoken = Cookies.get('csrftoken');
@@ -57,7 +58,8 @@ class Disk extends React.Component {
     this.state = {
       data: null,
       show_new_file: false,
-      show_permissions: false
+      show_permissions: false,
+      show_warning: false
     };
   }
 
@@ -90,6 +92,10 @@ class Disk extends React.Component {
   }
 
   deleteFiles() {
+    if (!this.anySelected()) {
+      this.setState({ show_warning: true });
+    }
+
     this.refs.table.state.selectedRowKeys.forEach((id) => {
       $.post(
         this.props.delete_file_url,
@@ -99,7 +105,25 @@ class Disk extends React.Component {
     });
   }
 
+  editPermissions() {
+    if (this.anySelected()) {
+      this.setState({ show_permissions: true });
+    } else {
+      this.setState({ show_warning: true });
+    }
+  }
+
+  handleAlertDismiss() {
+    this.setState({ show_warning: false });
+  }
+
   render() {
+    var body = document.body,
+    html = document.documentElement;
+
+    var height = Math.max( body.scrollHeight, body.offsetHeight,
+                           html.clientHeight, html.scrollHeight, html.offsetHeight );
+
     if (this.state.data === null) {
       return (
         <div className="row">
@@ -110,53 +134,62 @@ class Disk extends React.Component {
       );
     }
 
+    var notify;
+    if (this.state.show_warning) {
+      notify = <Alert bsStyle="danger" onDismiss={() => this.handleAlertDismiss()}>
+        <strong>Select at least one file!</strong>
+      </Alert>;
+      height -= 280;
+    } else {
+      notify = <div></div>;
+      height -= 205;
+    }
+
     return (
-      <div className="row">
-        <div className="col-md-2">
-          <Button
-            bsStyle="primary"
-            bsSize="large"
-            onClick={() => this.setState({ show_new_file: true })}
-          >
-            New file
-          </Button>
-          <Button
-            bsStyle="primary"
-            bsSize="large"
-            onClick={() => this.deleteFiles()}
-          >
-            Delete files
-          </Button>
-          <Button
-            bsStyle="primary"
-            bsSize="large"
-            onClick={() => { if (this.anySelected()) this.setState({ show_permissions: true })} }
-          >
-            Edit permissions
-          </Button>
-          <NewFile
-            show={this.state.show_new_file}
-            url={this.props.create_file_url}
-            file_extensions={this.props.file_extensions}
-            onUpdate={() => this.update()}
-            onClose={() => this.setState({ show_new_file: false })}
-          />
+      <div>
+        <div className="row">
+          {notify}
         </div>
-        <div className="col-md-10">
+        <div className="row">
+          <ButtonGroup role="group" aria-label="edit-files">
+            <Button onClick={() => this.setState({ show_new_file: true })}>
+              New file
+            </Button>
+            <Button onClick={() => this.deleteFiles()}>
+              Delete files
+            </Button>
+            <Button onClick={() => this.editPermissions()}>
+              Edit permissions
+            </Button>
+            <NewFile
+              show={this.state.show_new_file}
+              url={this.props.create_file_url}
+              file_extensions={this.props.file_extensions}
+              onUpdate={() => this.update()}
+              onClose={() => this.setState({ show_new_file: false })}
+            />
+            <EditPermissions
+              show={this.state.show_permissions}
+              files={() => this.refs.table.state.selectedRowKeys}
+              url={this.props.edit_permissions_url}
+              get_url={this.props.get_permissions_url}
+              onClose={() => this.setState({ show_permissions: false })}
+            />
+          </ButtonGroup>
           <BootstrapTable
             ref="table"
             data={this.state.data}
-            striped={true}
             hover={true}
             selectRow={selectRowProp}
             search={true}
+            height={height.toString() + 'px'}
           >
             <TableHeaderColumn
-              dataField="id"isKey={true} hidden={true} width="30"
+              dataField="id"isKey={true} hidden={true}
             >#</TableHeaderColumn>
             <TableHeaderColumn
               dataField="name" dataFormat={(cell, row) => this.nameFormatter(cell, row)} dataSort={true}
-            >name</TableHeaderColumn>
+            >Name</TableHeaderColumn>
             <TableHeaderColumn
               dataField="creator" dataSort={true} width="150"
             >Creator</TableHeaderColumn>

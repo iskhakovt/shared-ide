@@ -98,4 +98,5 @@ JS_FILES = [
     'new_file.js',
     'login.js',
     'registration.js',
+    'edit_permissions.js',
 ]

@@ -74,10 +74,10 @@ class NewFile extends React.Component {
         show={this.props.show}
         onHide={() => this.close()}
         container={this}
-        aria-labelledby="contained-modal-title"
+        aria-labelledby="contained-modal-new-file-title"
       >
         <Modal.Header closeButton>
-          <Modal.Title id="contained-modal-title">New file</Modal.Title>
+          <Modal.Title id="contained-modal-new-file-title">New file</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <form>

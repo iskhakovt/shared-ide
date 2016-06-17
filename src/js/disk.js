@@ -100,7 +100,7 @@ class Disk extends React.Component {
       $.post(
         this.props.delete_file_url,
         {file_id: id},
-        () => update()
+        () => this.update()
       );
     });
   }

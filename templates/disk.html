@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css" crossorigin="anonymous">
   </head>
   <body>
+    <input type="hidden" id="user_id" value="{{ request.user.id }}" />
     <input type="hidden" id="user" value="{{ request.user }}" />
     <input type="hidden" id="file_extensions" value="{{ file_extensions }}" />
 

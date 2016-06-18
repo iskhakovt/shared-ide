@@ -42,7 +42,7 @@ function signup(form) {
   ).done(function() {
     var next = getURLParameter('next');
     if (!next) {
-      next = '/disk/'
+      next = '/disk/';
     }
     window.location.replace(next);
   }).fail(function(data, status) {

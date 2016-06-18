@@ -37,7 +37,7 @@ class NewFile extends React.Component {
 
     $.post(
       this.props.url,
-      { name: this.state.name, type: this.state.type },
+      {name: this.state.name, type: this.state.type},
       () => this.props.onUpdate()
     );
     
@@ -52,7 +52,7 @@ class NewFile extends React.Component {
     var name = e.target.value;
 
     if (name == '') {
-      this.setState({ name: name });
+      this.setState({name: name});
     } else {
       this.setState({
         name: name,

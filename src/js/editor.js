@@ -4,7 +4,6 @@
 
 
 import React from 'react'
-import _ from 'lodash'
 import ace from 'brace'
 import 'brace/theme/solarized_light'
 import 'brace/mode/javascript'
@@ -106,5 +105,6 @@ class AceEditor extends React.Component {
     });
   }
 }
+
 
 export default AceEditor;

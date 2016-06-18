@@ -50,6 +50,7 @@ function user_socket(uri, heartbeat, receive_message) {
   }, $);
 }
 
+
 module.exports = {
   group_socket: group_socket,
   user_socket: user_socket

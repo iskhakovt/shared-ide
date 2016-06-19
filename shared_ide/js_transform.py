@@ -3,7 +3,7 @@
 
 import hashlib
 import json
-from os import path
+from os import makedirs, path
 from subprocess import call
 
 from .ui_progress_bar import UIProgressBar
@@ -42,28 +42,30 @@ class HashSaver:
 def build_jsx():
     print('Building JS src...')
 
+    makedirs('babel-build', exist_ok=True)
+
     saver = HashSaver(HASH_PATH)
-    to_proceed = []
+    to_proceed = set()
 
     for group in JS_FILES:
-        if all([hash_file('src/js/' + file) == saver.get(file) for file in group]):
-            continue
-        else:
-            to_proceed.extend(group)
+        if not all([hash_file('src/js/' + file) == saver.get(file) for file in group]):
+            to_proceed |= set(group)
 
     progressbar = UIProgressBar('babel')
     progressbar.init(len(to_proceed))
     for file in to_proceed:
         file_path = 'src/js/' + file
         name, extension = path.splitext(path.basename(file))
-        tmp = 'src/js/' + name + '-build.js'
+        tmp = 'babel-build/' + name + '-build.js'
 
-        call([
+        if (call([
             'babel',
             file_path,
             '-o',
             tmp,
-        ])
+        ])):
+            raise Exception('babel {} error'.format(file_path))
+
         progressbar.step()
     progressbar.finish()
 
@@ -72,18 +74,20 @@ def build_jsx():
     for file in to_proceed:
         file_path = 'src/js/' + file
         name, extension = path.splitext(path.basename(file))
-        tmp = 'src/js/' + name + '-build.js'
+        tmp = 'babel-build/' + name + '-build.js'
         out = 'static/' + name + '.js'
 
         file_hash, saved_hash = hash_file(file_path), saver.get(file)
         saver.insert(file, file_hash)
 
-        call([
+        if(call([
             'browserify',
             tmp,
             '-o',
             out,
-        ])
+        ])):
+            raise Exception('browserify {} error'.format(file_path))
+
         progressbar.step()
     progressbar.finish()
 
@@ -94,7 +98,7 @@ def build_jsx():
 HASH_PATH = 'js_build_hash.json'
 
 JS_FILES = [
-    ['disk.js', 'new_file.js', 'edit_permissions.js'],
+    ['disk.js', 'new_file.js', 'edit_permissions.js', 'csrf.js'],
     ['editor.js', 'ide.js', 'socket.js'],
-    ['login.js', 'registration.js'],
+    ['auth.js', 'csrf.js'],
 ]

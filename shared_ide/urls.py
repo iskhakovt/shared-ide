@@ -24,5 +24,6 @@ urlpatterns = [
     url(r'^disk/edit_permissions/$', disk_views.edit_permissions),
     url(r'^ide/(?P<document>[a-zA-Z0-9]+)/$', ide_views.index),
     url(r'accounts/', include('django.contrib.auth.urls')),
-    url(r'^registration/$', disk_views.registration),
+    url(r'^login/$', disk_views.login_view),
+    url(r'^registration/$', disk_views.registrate_view),
 ]

@@ -5,7 +5,7 @@
 
 import React from 'react'
 import $ from 'jquery'
-import { Button, Modal, FormGroup, FormControl, ControlLabel } from 'react-bootstrap';
+import { Button, ControlLabel, FormControl, FormGroup, Modal } from 'react-bootstrap'
 
 
 class NewFile extends React.Component {

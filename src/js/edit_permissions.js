@@ -7,7 +7,7 @@ import React from 'react'
 import $ from 'jquery'
 import _ from 'lodash';
 import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table';
-import { Alert, Button, Modal, FormGroup, FormControl, ControlLabel, Label } from 'react-bootstrap';
+import { Alert, Button, ControlLabel, FormControl, FormGroup, Label, Modal } from 'react-bootstrap';
 
 
 function openingBracket() {
@@ -64,21 +64,21 @@ class EditPermissions extends React.Component {
     delete users_copy[user_id];
 
     this.setState({
-      'users': users_copy
+      users: users_copy
     });
   }
 
   gotPermissions(file_id, data) {
     var permissions = this.state.permissions;
     permissions[file_id] = {
-      'view': new Set(data.view),
-      'edit': new Set(data.edit)
+      view: new Set(data.view),
+      edit: new Set(data.edit)
     };
 
     delete this.get_permission_requests[file_id];
 
     this.setState({
-      'permissions': permissions
+      permissions: permissions
     });
   }
   
@@ -94,7 +94,7 @@ class EditPermissions extends React.Component {
 
       this.get_permission_requests[file_id] = $.get(
         this.props.get_permissions_url,
-        {'file_id': file_id},
+        {file_id: file_id},
         (result) => this.gotPermissions(file_id, result)
       ).fail(
         () => setTimeout(this.updateFiles(files), 500)
@@ -108,9 +108,9 @@ class EditPermissions extends React.Component {
     }
 
     return _.map(this.state.users, (user, user_id) => ({
-      'id': user_id,
-      'username': user.username,
-      'access': this.getPermissions(parseInt(user_id))
+      id: user_id,
+      username: user.username,
+      access: this.getPermissions(parseInt(user_id))
     }));
   }
 
@@ -176,7 +176,7 @@ class EditPermissions extends React.Component {
 
         this.performing_requests[key] = $.post(
           this.props.url,
-          {'file_id': file_id, 'user_id': user_id, 'access': access}
+          {file_id: file_id, user_id: user_id, access: access}
         ).always(() => this.postFinished(key));
       });
     });

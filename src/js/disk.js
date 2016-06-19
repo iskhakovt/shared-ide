@@ -7,28 +7,15 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import $ from 'jquery'
 import _ from 'lodash';
-import Cookies from 'js-cookie'
-import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table';
-import { Alert, Button, ButtonGroup, Label } from 'react-bootstrap';
+import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table'
+import { Alert, Button, ButtonGroup, Label } from 'react-bootstrap'
 
 import NewFile from './new_file-build'
 import EditPermissions from './edit_permissions-build'
+import csrf from './csrf-build'
 
 
-var csrftoken = Cookies.get('csrftoken');
-
-function csrfSafeMethod(method) {
-    // these HTTP methods do not require CSRF protection
-    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-}
-
-$.ajaxSetup({
-    beforeSend: function(xhr, settings) {
-        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
-            xhr.setRequestHeader("X-CSRFToken", csrftoken);
-        }
-    }
-});
+csrf($);
 
 
 function openingBracket() {
@@ -79,17 +66,17 @@ class Disk extends React.Component {
 
   update() {
     this.setState({
-      'files': null,
-      'users': null
+      files: null,
+      users: null
     });
     
     this.files_request = $.get(
       this.props.get_files_url,
-      (result) => this.setState({'files': result})
+      (result) => this.setState({files: result})
     );
     this.users_request = $.get(
       this.props.get_users_url,
-      (result) => this.setState({'users': result})
+      (result) => this.setState({users: result})
     );
   }
   
@@ -99,12 +86,12 @@ class Disk extends React.Component {
     }
 
     return _.map(this.state.files, (file, file_id) => ({
-      'id': file_id,
-      'name': file.name,
-      'type': file.type,
-      'creator': this.state.users[file.creator_id].username,
-      'access': file.access,
-      'last_modified': file.last_modified
+      id: file_id,
+      name: file.name,
+      type: file.type,
+      creator: this.state.users[file.creator_id].username,
+      access: file.access,
+      last_modified: file.last_modified
     }));
   }
 

@@ -3,6 +3,8 @@
 
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 
@@ -159,26 +161,49 @@ def get_permissions(request):
     return JsonResponse({'view': view, 'edit': edit})
 
 
-def registration(request):
-    if request.method == 'GET':
-        return render(request, 'registration.html')
-    else:
-        required = ('username', 'password', 'email', 'first_name', 'last_name')
-        for field in required:
-            if field not in request.POST:
-                return HttpResponseBadRequest()
+def login_view(request):
+    required = ('username', 'password')
+    for field in required:
+        if field not in request.POST:
+            return HttpResponseBadRequest()
 
-        if get_or_none(User, username=request.POST['username']):
-            return HttpResponseBadRequest('username-exists')
+    user = authenticate(
+        username=request.POST['username'],
+        password=request.POST['password'],
+    )
 
-        User.objects.create_user(
-            **{field: request.POST[field] for field in request.POST}
-        )
-
-        user = authenticate(
-            username=request.POST['username'],
-            password=request.POST['password'],
-        )
-
+    if user:
         login(request, user)
         return HttpResponse(status=201)
+    else:
+        return HttpResponseBadRequest('incorrect')
+
+
+def registrate_view(request):
+    required = ('username', 'password', 'email', 'first_name', 'last_name')
+    for field in required:
+        if field not in request.POST:
+            return HttpResponseBadRequest()
+
+    try:
+        validate_email(request.POST['email'])
+    except ValidationError:
+        return HttpResponseBadRequest('bad-email')
+
+    if len(request.POST['password']) < 8:
+        return HttpResponseBadRequest('bad-password')
+
+    if get_or_none(User, username=request.POST['username']):
+        return HttpResponseBadRequest('username-exists')
+
+    User.objects.create_user(
+        **{field: request.POST[field] for field in request.POST}
+    )
+
+    user = authenticate(
+        username=request.POST['username'],
+        password=request.POST['password'],
+    )
+
+    login(request, user)
+    return HttpResponse(status=201)

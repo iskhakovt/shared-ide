@@ -1,6 +1,6 @@
 {
   "name": "shared_ide_dependences",
-  "autor": { "name" : "Timur Iskhakov", "email" : "iskhakovt@gmail.com" },
+  "author": { "name" : "Timur Iskhakov", "email" : "iskhakovt@gmail.com" },
   "repository" : { "type" : "git", "url" : "https://github.com/iskhakovt/shared-ide.git" },
   "version": "0.0.1",
   "dependencies": {

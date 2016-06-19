@@ -39,3 +39,12 @@ tmtagsHistory
 *.sublime-project
 *.sublime-workspace
 .bundle
+
+# Specific project files #
+##########################
+static/*.js
+babel-build/*
+*/migrations/0*
+node_modules
+dump.rdb
+js_build_hash.json

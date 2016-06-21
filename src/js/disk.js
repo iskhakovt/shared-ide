@@ -5,8 +5,10 @@
 
 import React from 'react'
 import ReactDOM from 'react-dom'
+import reactMixin from 'react-mixin'
 import $ from 'jquery'
 import _ from 'lodash';
+import accepts from 'attr-accept'
 import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table'
 import { Alert, Button, ButtonGroup, Label } from 'react-bootstrap'
 
@@ -33,6 +35,19 @@ String.prototype.format = function(placeholders) {
 };
 
 
+var SetIntervalMixin = {
+  componentWillMount: function() {
+    this.intervals = [];
+  },
+  setInterval: function() {
+    this.intervals.push(setInterval.apply(null, arguments));
+  },
+  componentWillUnmount: function() {
+    this.intervals.forEach(clearInterval);
+  }
+};
+
+
 var selectRowProp = {
   mode: "checkbox",  //checkbox for multi select, radio for single select.
   clickToSelect: true,   //click row will trigger a selection on that row.
@@ -48,15 +63,16 @@ class Disk extends React.Component {
       users: null,
       show_new_file: false,
       show_permissions: false,
-      show_warning: false
+      warning_text: ''
     };
   }
 
   componentDidMount() {
     this.files_request = null;
     this.users_request = null;
-    
+
     this.update();
+    this.setInterval(() => this.update(), 1000);
   }
 
   componentWillUnmount() {
@@ -64,19 +80,22 @@ class Disk extends React.Component {
     this.users_request.abort();
   }
 
+  gotUpdate(prop, data) {
+    if (this.state[prop] != data) {
+      var state = this.state;
+      state[prop] = data;
+      this.setState(state);
+    }
+  }
+
   update() {
-    this.setState({
-      files: null,
-      users: null
-    });
-    
     this.files_request = $.get(
       this.props.get_files_url,
-      (result) => this.setState({files: result})
+      (result) => this.gotUpdate('files', result)
     );
     this.users_request = $.get(
       this.props.get_users_url,
-      (result) => this.setState({users: result})
+      (result) => this.gotUpdate('users', result)
     );
   }
   
@@ -114,38 +133,63 @@ class Disk extends React.Component {
   newFile() {
     this.setState({
       show_new_file: true,
-      show_warning: false
+      warning_text: ''
     });
   }
 
   uploadFile() {
     this.handleAlertDismiss();
+
+    this.fileInputEl.value = null;
+    this.fileInputEl.click();
+  }
+
+  onUpload(e) {
+    e.preventDefault();
+    const files = e.dataTransfer ? e.dataTransfer.files : e.target.files;
+
+    if (this.allFilesAccepted(Array.prototype.slice.call(files))) {
+      console.log(files);
+    } else {
+      this.setState({warning_text: 'Unsupported file extension!'});
+    }
+  }
+
+  getAcceptExtensions() {
+    return _.map(this.props.file_extensions, (value, key) => (
+      '.' + key
+    ));
+  }
+
+  allFilesAccepted(files) {
+    return files.every(file => accepts(file, this.getAcceptExtensions().join()));
   }
 
   deleteFiles() {
     if (!this.anySelectedFiles()) {
-      this.setState({ show_warning: true });
+      this.setState({warning_text: 'Select at least one file!'});
+      return;
     }
 
     this.handleAlertDismiss();
     this.getSelectedFiles().forEach((id) => {
       $.post(
         this.props.delete_file_url,
-        {file_id: id},
-        () => this.update()
+        {file_id: id}
       );
     });
   }
 
   editPermissions() {
-    if (this.anySelectedFiles()) {
-      this.setState({
-        show_permissions: true,
-        show_warning: false
-      });
-    } else {
-      this.setState({ show_warning: true });
+    if (!this.anySelectedFiles()) {
+      this.setState({warning_text: 'Select at least one file!'});
+      return
     }
+
+    this.setState({
+      show_permissions: true,
+      warning_text: null
+    });
   }
   
   nameFormatter(cell, row){
@@ -168,7 +212,7 @@ class Disk extends React.Component {
   }
 
   handleAlertDismiss() {
-    this.setState({ show_warning: false });
+    this.setState({warning_text: null});
   }
 
   render() {
@@ -185,10 +229,10 @@ class Disk extends React.Component {
     }
 
     var notify;
-    if (this.state.show_warning) {
+    if (this.state.warning_text) {
       notify =
         <Alert bsStyle="danger" onDismiss={() => this.handleAlertDismiss()}>
-          <strong>Select at least one file!</strong>
+          <strong>{this.state.warning_text}</strong>
         </Alert>;
       height -= 280;
     } else {
@@ -207,7 +251,15 @@ class Disk extends React.Component {
               New file
             </Button>
             <Button onClick={() => this.uploadFile()}>
-              Upload file
+              Upload files
+              <input
+                accept={this.getAcceptExtensions()}
+                type="file"
+                style={{display: 'none'}}
+                multiple={true}
+                ref={el => this.fileInputEl = el}
+                onChange={(e) => this.onUpload(e)}
+              />
             </Button>
             <Button onClick={() => this.deleteFiles()}>
               Delete files
@@ -269,6 +321,8 @@ class Disk extends React.Component {
   };
 }
 
+reactMixin(Disk.prototype, SetIntervalMixin);
+
 
 function getHeight() {
   var body = document.body, html = document.documentElement;
@@ -292,12 +346,12 @@ function getWidth() {
 ReactDOM.render(
   <Disk
     user_id={document.getElementById('user_id').value}
-    get_users_url='users/'
-    get_files_url='files/'
-    create_file_url='create_file/'
-    delete_file_url='delete_file/'
-    edit_permissions_url='edit_permissions/'
-    get_permissions_url='permissions/'
+    get_users_url="users/"
+    get_files_url="files/"
+    create_file_url="create_file/"
+    delete_file_url="delete_file/"
+    edit_permissions_url="edit_permissions/"
+    get_permissions_url="permissions/"
     file_extensions={JSON.parse(document.getElementById('file_extensions').value)}
     height={getHeight()}
     width={getWidth()}

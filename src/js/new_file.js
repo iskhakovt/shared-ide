@@ -37,8 +37,7 @@ class NewFile extends React.Component {
 
     $.post(
       this.props.url,
-      {name: this.state.name, type: this.state.type},
-      () => this.props.onUpdate()
+      {name: this.state.name, type: this.state.type}
     );
     
     this.close();

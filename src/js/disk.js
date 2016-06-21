@@ -14,16 +14,12 @@ import { Alert, Button, ButtonGroup, Label } from 'react-bootstrap'
 
 import NewFile from './new_file-build'
 import EditPermissions from './edit_permissions-build'
+import Loader from './loader-build'
 import deepCompare from './compare-build'
 import csrf from './csrf-build'
 
 
 csrf($);
-
-
-function openingBracket() {
-  return "{";
-}
 
 
 String.prototype.format = function(placeholders) {
@@ -220,16 +216,6 @@ class Disk extends React.Component {
   render() {
     var height = this.props.height;
 
-    if (this.getLoading()) {
-      return (
-        <div className="row">
-            <div className="loader">
-              <span>{openingBracket()}</span><span>}</span>
-            </div>
-        </div>
-      );
-    }
-
     var notify;
     if (this.state.warning_text) {
       notify =
@@ -242,10 +228,8 @@ class Disk extends React.Component {
       height -= 205;
     }
 
-    console.log(this.props.containerWidth, this.props.containerHeight);
-
     return (
-      <div>
+      <Loader loading={this.getLoading()}>
         <div className="row">
           {notify}
         </div>
@@ -320,7 +304,7 @@ class Disk extends React.Component {
             >Last modified</TableHeaderColumn>
           </BootstrapTable>
         </div>
-      </div>
+      </Loader>
     );
   };
 }
@@ -349,14 +333,14 @@ function getWidth() {
 
 ReactDOM.render(
   <Disk
-    user_id={document.getElementById('user_id').value}
+    user_id={$('#user_id').val()}
     get_users_url="users/"
     get_files_url="files/"
     create_file_url="create_file/"
     delete_file_url="delete_file/"
     edit_permissions_url="edit_permissions/"
     get_permissions_url="permissions/"
-    file_extensions={JSON.parse(document.getElementById('file_extensions').value)}
+    file_extensions={JSON.parse($('#file_extensions').val())}
     height={getHeight()}
     width={getWidth()}
   />,

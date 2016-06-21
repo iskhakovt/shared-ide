@@ -9,12 +9,9 @@ import _ from 'lodash';
 import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table';
 import { Alert, Button, ControlLabel, FormControl, FormGroup, Label, Modal } from 'react-bootstrap';
 
+import Loader from './loader-build'
 import deepCompare from './compare-build'
 
-
-function openingBracket() {
-  return "{";
-}
 
 function clone(obj) {
   if (null == obj || "object" != typeof obj) return obj;
@@ -193,61 +190,6 @@ class EditPermissions extends React.Component {
       throw "No files in edit permissions";
     }
 
-    var body, footer;
-
-    if (this.getLoading()) {
-      body =
-        <div className="loader">
-          <span>{openingBracket()}</span><span>}</span>
-        </div>;
-      footer = <div></div>;
-    } else {
-      body =
-        <row>
-          <Alert bsStyle="warning">
-            Note that you cannot change the permissions for the creator of the file.
-          </Alert>
-          <BootstrapTable
-            ref="users_table"
-            data={this.getData()}
-            hover={true}
-            selectRow={selectRowProp}
-          >
-            <TableHeaderColumn
-              dataField="id" isKey={true} hidden={true}
-            >#</TableHeaderColumn>
-            <TableHeaderColumn
-              dataField="username" dataSort={true}
-            >Name</TableHeaderColumn>
-            <TableHeaderColumn
-                dataField="access"
-                dataSort={true}
-                dataAlign="center"
-                dataFormat={(cell, row) => this.permissionFormatter(cell, row)}
-                width="90"
-              >Access</TableHeaderColumn>
-          </BootstrapTable>
-        </row>;
-      footer =
-        <row>
-          <div className="col-md-3">
-            <Button onClick={() => this.submit('none')}>
-              None
-            </Button>
-          </div>
-          <div className="col-md-3">
-            <Button onClick={() => this.submit('view')}>
-              View
-            </Button>
-          </div>
-          <div className="col-md-3">
-            <Button onClick={() => this.submit('edit')}>
-              Edit
-            </Button>
-          </div>
-        </row>;
-    }
-
     return (
       <Modal
         show={this.props.show}
@@ -256,15 +198,57 @@ class EditPermissions extends React.Component {
         bsSize="lg"
         aria-labelledby="contained-modal-edit-permissions-title"
       >
-        <Modal.Header closeButton>
-          <Modal.Title id="contained-modal-edit-permissions-title">Edit permissions</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {body}
-        </Modal.Body>
-        <Modal.Footer>
-          {footer}
-        </Modal.Footer>
+        <Loader loading={this.getLoading()}>
+          <Modal.Header closeButton>
+            <Modal.Title id="contained-modal-edit-permissions-title">Edit permissions</Modal.Title>
+              </Modal.Header>
+              <Modal.Body>
+                <row>
+              <Alert bsStyle="warning">
+                Note that you cannot change the permissions for the creator of the file.
+              </Alert>
+              <BootstrapTable
+                ref="users_table"
+                data={this.getData()}
+                hover={true}
+                selectRow={selectRowProp}
+              >
+                <TableHeaderColumn
+                  dataField="id" isKey={true} hidden={true}
+                >#</TableHeaderColumn>
+                <TableHeaderColumn
+                  dataField="username" dataSort={true}
+                >Name</TableHeaderColumn>
+                <TableHeaderColumn
+                    dataField="access"
+                    dataSort={true}
+                    dataAlign="center"
+                    dataFormat={(cell, row) => this.permissionFormatter(cell, row)}
+                    width="90"
+                  >Access</TableHeaderColumn>
+              </BootstrapTable>
+            </row>
+          </Modal.Body>
+          <Modal.Footer>
+            <row>
+              <div className="col-md-3">
+                <Button onClick={() => this.submit('none')}>
+                  None
+                </Button>
+              </div>
+              <div className="col-md-3">
+                <Button onClick={() => this.submit('view')}>
+                  View
+                </Button>
+              </div>
+              <div className="col-md-3">
+                <Button onClick={() => this.submit('edit')}>
+                  Edit
+                </Button>
+              </div>
+            </row>
+          </Modal.Footer>
+        </Loader>
       </Modal>
     );
   };

@@ -6,7 +6,8 @@
 import React from 'react'
 import ace from 'brace'
 import 'brace/theme/solarized_light'
-import 'brace/mode/javascript'
+import 'brace/mode/python'
+import 'brace/mode/c_cpp'
 import 'brace/ext/language_tools'
 
 

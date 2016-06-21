@@ -6,9 +6,11 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import ot from 'ot'
+import $ from 'jquery'
 
 import AceEditor from './editor-build'
 import Socket from './socket-build'
+import Loader from './loader-build'
 
 
 class Editor extends React.Component {
@@ -16,11 +18,19 @@ class Editor extends React.Component {
     super(props, context);
     this.state = {
       user: null,
+      name: null,
+      type: null,
+      access: null,
       value: '',
       theme: 'solarized_light',
       fontSize: 12,
       group_socket: null,
       user_socket: null
+    };
+    this.modes =  {
+      py2: 'python',
+      py3: 'python',
+      cpp: 'c_cpp'
     };
   }
 
@@ -37,29 +47,47 @@ class Editor extends React.Component {
       this.props.websocket_heartbeat,
       (msg) => this.userMessage(msg)
     );
+
+    this.loadFile();
+  }
+  
+  loadFile() {
+    $.get(
+      '/disk/files/',
+      {file_id: this.props.file_id}
+    ).done(
+      (result) => this.gotFile(result)
+    ).fail(
+      () => this.loadFile()
+    )
+  }
+
+  gotFile(files) {
+    if (this.props.file_id in files) {
+      this.setState({
+        name: files[this.props.file_id].name,
+        type: files[this.props.file_id].type,
+        access: files[this.props.file_id].access
+      });
+    } else {
+      this.loadFile();
+    }
+  }
+
+  getLoading() {
+    return !this.state.name;
+  }
+
+  getType() {
+    return this.modes[this.state.type];
   }
 
   handleChange(e) {
     this.setState({
       value: e.target.value
     });
-    console.log(e.target);
+    // console.log(e.target);
   }
-
-  render() {
-    return (
-      <AceEditor
-        mode="javascript"
-        theme={this.state.theme}
-        fontSize={this.state.fontSize}
-        value={this.state.value}
-        name="editor"
-        onChange={(e) => this.onChange(e)}
-        group_socket={this.state.group_socket}
-        user_socket={this.state.user_socket}
-      />
-    );
-  };
 
   getAbsolutePos(pos) {
     var lines = this.state.value.split('\n');
@@ -115,14 +143,32 @@ class Editor extends React.Component {
 
     console.log('User message', parsed);
   }
+  
+  render() {
+    return (
+      <Loader loading={this.getLoading()}>
+        <AceEditor
+          mode={this.getType()}
+          theme={this.state.theme}
+          fontSize={this.state.fontSize}
+          value={this.state.value}
+          name="editor"
+          onChange={(e) => this.onChange(e)}
+          group_socket={this.state.group_socket}
+          user_socket={this.state.user_socket}
+        />
+      </Loader>
+    );
+  };
 }
 
 
 ReactDOM.render(
   <Editor
-    user={document.getElementById('user').value}
-    websocket_uri={document.getElementById('websocket_uri').value}
-    websocket_heartbeat={document.getElementById('websocket_heartbeat').value}
+    user={$('#user').val()}
+    file_id={$('#file_id').val()}
+    websocket_uri={$('#websocket_uri').val()}
+    websocket_heartbeat={$('#websocket_heartbeat').val()}
   />,
   document.getElementById('root')
 );

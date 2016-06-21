@@ -98,7 +98,7 @@ def build_jsx():
 HASH_PATH = 'js_build_hash.json'
 
 JS_FILES = [
-    ['disk.js', 'new_file.js', 'edit_permissions.js', 'compare.js', 'csrf.js'],
-    ['editor.js', 'ide.js', 'socket.js'],
+    ['disk.js', 'new_file.js', 'edit_permissions.js', 'compare.js', 'loader.js', 'csrf.js'],
+    ['editor.js', 'ide.js', 'socket.js', 'loader.js'],
     ['auth.js', 'csrf.js'],
 ]

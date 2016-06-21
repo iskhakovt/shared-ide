@@ -4,7 +4,7 @@
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.core.validators import validate_email
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 
@@ -66,10 +66,21 @@ def get_files(request):
             }
         )
 
+    def filter(objects, file_id):
+        if file_id:
+            try:
+                return [objects.get(pk=file_id)]
+            except ObjectDoesNotExist:
+                return []
+        else:
+            return objects.all()
+
+    file_id = request.GET['file_id'] if 'file_id' in request.GET else None
+
     response = []
-    for file in person.edit.all():
+    for file in filter(person.edit, file_id):
         response.append(prepare_file(file, 'edit'))
-    for file in person.view.all():
+    for file in filter(person.view, file_id):
         response.append(prepare_file(file, 'view'))
 
     return JsonResponse(dict(response))
@@ -179,7 +190,7 @@ def login_view(request):
         return HttpResponseBadRequest('incorrect')
 
 
-def registrate_view(request):
+def register_view(request):
     required = ('username', 'password', 'email', 'first_name', 'last_name')
     for field in required:
         if field not in request.POST:

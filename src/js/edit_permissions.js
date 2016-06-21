@@ -9,6 +9,8 @@ import _ from 'lodash';
 import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table';
 import { Alert, Button, ControlLabel, FormControl, FormGroup, Label, Modal } from 'react-bootstrap';
 
+import deepCompare from './compare-build'
+
 
 function openingBracket() {
   return "{";
@@ -50,7 +52,7 @@ class EditPermissions extends React.Component {
   componentWillReceiveProps(nextProps) {
     this.gotUsers(nextProps.users, nextProps.user_id);
 
-    if (this.props.files !== nextProps.files) {
+    if (!deepCompare(this.props.files, nextProps.files)) {
       this.updateFiles(nextProps.files);
     }
   }

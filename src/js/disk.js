@@ -14,6 +14,7 @@ import { Alert, Button, ButtonGroup, Label } from 'react-bootstrap'
 
 import NewFile from './new_file-build'
 import EditPermissions from './edit_permissions-build'
+import deepCompare from './compare-build'
 import csrf from './csrf-build'
 
 
@@ -71,7 +72,8 @@ class Disk extends React.Component {
     this.files_request = null;
     this.users_request = null;
 
-    this.update();
+    // It looks better with a loader
+    // this.update();
     this.setInterval(() => this.update(), 1000);
   }
 
@@ -81,7 +83,7 @@ class Disk extends React.Component {
   }
 
   gotUpdate(prop, data) {
-    if (this.state[prop] != data) {
+    if (!deepCompare(this.state[prop], data)) {
       var state = this.state;
       state[prop] = data;
       this.setState(state);
@@ -239,6 +241,8 @@ class Disk extends React.Component {
       notify = <div></div>;
       height -= 205;
     }
+
+    console.log(this.props.containerWidth, this.props.containerHeight);
 
     return (
       <div>

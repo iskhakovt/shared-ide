@@ -13,6 +13,7 @@
   </head>
 
   <body>
+    <input type="hidden" id="csrftoken" value="{% csrf_token %}" />
     <input type="hidden" id="user" value="{{ request.user.id }}" />
     <input type="hidden" id="file_id" value="{{ file.id }}" />
     <input type="hidden" id="websocket_uri" value="{{ WEBSOCKET_URI }}" />
@@ -20,5 +21,6 @@
     <div id="root"></div>
 
     <script src="{% static "ide.js" %}" type="text/javascript" charset="utf-8"></script>
+    <script src="{% static "FileSaver.min.js" %}" type="text/javascript" charset="utf-8"></script>
   </body>
 </html>

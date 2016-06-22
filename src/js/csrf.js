@@ -13,7 +13,10 @@ function csrfSafeMethod(method) {
 
 function csrf($) {
   var csrftoken = Cookies.get('csrftoken');
-  
+  if (!csrftoken) {
+    csrftoken = $('#csrftoken').val();
+  }
+
   $.ajaxSetup({
       beforeSend: function(xhr, settings) {
           if (!csrfSafeMethod(settings.type) && !this.crossDomain) {

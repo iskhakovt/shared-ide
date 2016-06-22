@@ -5,8 +5,10 @@
 
 import React from 'react'
 import ReactDOM from 'react-dom'
+import reactMixin from 'react-mixin'
 import $ from 'jquery'
-import { Button } from 'react-bootstrap'
+import { Button, ButtonGroup } from 'react-bootstrap'
+import hotkey from 'react-hotkey'
 
 import AceEditor from './editor-build'
 import Socket from './socket-build'
@@ -17,6 +19,9 @@ import deepCompare from './compare-build'
 
 
 csrf($);
+
+
+hotkey.activate();
 
 
 function random_string(length)  {
@@ -58,19 +63,48 @@ class Editor extends React.Component {
       op: null,
       show_permissions: false
     };
+
     this.modes =  {
       py2: 'python',
       py3: 'python',
       cpp: 'c_cpp'
     };
+    this.mime = {
+      py2: 'x-script.python',
+      py3: 'x-script.python',
+      cpp: 'text/x-c'
+    };
 
     this.cursor = {column: 0, row: 0};
     this.last_send = null;
+
+    this.hotkeyHandler = (e) => this.handleHotkey(e);
+  }
+
+  handleHotkey(e) {
+    if (e.ctrlKey && e.key == 's') {
+      e.preventDefault();
+      this.saveFile();
+    }
+  }
+
+  saveFile() {
+    if (this.state.value !== null) {
+        var filename = this.state.name + '.' + this.state.type;
+        var blob = new Blob([this.state.value], {type: "text/plain;charset=utf-8"});
+        saveAs(blob, filename);
+      }
   }
 
   componentDidMount() {
     this.state.user = this.props.user;
     this.load();
+
+    hotkey.addHandler(this.hotkeyHandler);
+  }
+
+  componentWillUnmount() {
+      hotkey.removeHandler(this.hotkeyHandler);
   }
   
   load() {
@@ -345,13 +379,23 @@ class Editor extends React.Component {
                   </ol>
                 </li>
                 <li>
-                  <Button
-                    type="button"
-                    className="btn btn-default navbar-btn"
-                    onClick={() => this.setState({show_permissions: true})}
-                  >
-                    Edit permissions
-                  </Button>
+                  <ButtonGroup role="group" aria-label="edit-file">
+                    <Button
+                      type="button"
+                      className="btn btn-default navbar-btn"
+                      onClick={() => this.setState({show_permissions: true})}
+                      disabled={this.state.access == 'edit' ? null : true}
+                    >
+                      Edit permissions
+                    </Button>
+                    <Button
+                      type="button"
+                      className="btn btn-default navbar-btn"
+                      onClick={() => this.saveFile()}
+                    >
+                      Save file
+                    </Button>
+                  </ButtonGroup>
                   <EditPermissions
                     show={this.state.show_permissions}
                     files={[this.props.file_id]}
@@ -391,6 +435,8 @@ class Editor extends React.Component {
     );
   };
 }
+
+reactMixin(Editor.prototype, hotkey.Mixin('handleHotkey'));
 
 
 ReactDOM.render(

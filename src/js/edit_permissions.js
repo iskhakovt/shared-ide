@@ -109,8 +109,6 @@ class EditPermissions extends React.Component {
         this.props.get_permissions_url,
         {file_id: file_id},
         (result) => this.gotPermissions(file_id, result)
-      ).fail(
-        () => setTimeout(this.updateFiles(files), 500)
       );
     });
   }

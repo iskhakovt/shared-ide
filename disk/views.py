@@ -10,7 +10,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 
 import json
 
-from disk.models import *
+from disk.models import File, Person, FILE_EXTENSIONS
 
 
 def get_or_none(cls, **kwargs):

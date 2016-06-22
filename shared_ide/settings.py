@@ -28,8 +28,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'ws4redis',
-    'djcelery',
+    'channels',
     'ide',
     'disk',
 ]
@@ -127,28 +126,20 @@ STATICFILES_DIRS = [
 LOGIN_REDIRECT_URL = '/'
 
 
-# Redis
+# Redis sessions
 
 SESSION_ENGINE = 'redis_sessions.session'
 SESSION_REDIS_PREFIX = 'session'
-WEBSOCKET_URL = '/ws/'
-
-WS4REDIS_CONNECTION = {
-    'host': 'localhost',
-    'port': 6379,
-    'db': 1,
-}
-
-WS4REDIS_EXPIRE = 7200
-WS4REDIS_PREFIX = 'ws'
-WS4REDIS_HEARTBEAT = '--heartbeat--'
 
 
-# Celery
+# Channel WebSocket
 
-BROKER_URL = 'redis://localhost:6379/2'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/2'
-BROKER_TRANSPORT_OPTIONS = {
-    'fanout_prefix': True,
-    'fanout_patterns': True,
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'asgi_redis.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [('localhost', 6379)],
+        },
+        'ROUTING': 'shared_ide.routing.channel_routing',
+    },
 }

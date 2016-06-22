@@ -90,7 +90,9 @@ class EditPermissions extends React.Component {
       if (this.get_permission_requests[file_id]) {
         this.get_permission_requests[file_id].abort();
       }
+    });
 
+    files.forEach((file_id) => {
       this.get_permission_requests[file_id] = $.get(
         this.props.get_permissions_url,
         {file_id: file_id},

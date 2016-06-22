@@ -2,13 +2,12 @@
 
 
 from django.contrib.auth.models import User
-from django.core.files.storage import FileSystemStorage
+# from django.core.files.storage import FileSystemStorage
 from django.db import models
 from django.db.models.signals import post_save
 from django.utils import timezone
+from django.utils.crypto import get_random_string
 
-
-fs = FileSystemStorage(location='/shared')
 
 FILE_EXTENSIONS = (
     ('cpp', 'C++'),
@@ -23,7 +22,9 @@ class File(models.Model):
     creator = models.ForeignKey(User, on_delete=models.CASCADE)
     last_modified = models.DateTimeField()
 
-    file = models.FileField(storage=fs)
+    file = models.TextField()
+
+    ws_group = models.CharField(max_length=32)
 
     viewers = models.ManyToManyField(
         'Person', related_name='viewers', blank=True
@@ -47,7 +48,9 @@ class File(models.Model):
             name=name,
             type=type,
             creator=creator,
-            last_modified=timezone.now()
+            last_modified=timezone.now(),
+            file='',
+            ws_group=get_random_string(length=32)
         )
 
 

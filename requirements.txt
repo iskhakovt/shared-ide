@@ -1,8 +1,6 @@
-celery >= 3.1
+asgi_redis >= 0.13.1
+channels >= 0.14.2
 Django >= 1.9
-django-celery >= 3.1
 django-redis-sessions >= 0.5
-django-socket-server >= 0.0.4
-django-websocket-redis >= 0.4
 progressbar33 >= 2.4
 redis >= 2.10

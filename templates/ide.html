@@ -13,10 +13,9 @@
   </head>
 
   <body>
-    <input type="hidden" id="user" value="{{ request.user }}" />
+    <input type="hidden" id="user" value="{{ request.user.id }}" />
     <input type="hidden" id="file_id" value="{{ file.id }}" />
     <input type="hidden" id="websocket_uri" value="{{ WEBSOCKET_URI }}" />
-    <input type="hidden" id="websocket_heartbeat" value={{ WS4REDIS_HEARTBEAT }} />
 
     <nav class="navbar navbar-default navbar-static-top">
       <div class="container">
@@ -34,7 +33,6 @@
 
     <div id="root"></div>
 
-    <script src="{% static "js/ws4redis.js" %}" type="text/javascript" charset="utf-8"></script>
     <script src="{% static "ide.js" %}" type="text/javascript" charset="utf-8"></script>
   </body>
 </html>

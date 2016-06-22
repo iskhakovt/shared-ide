@@ -5,12 +5,22 @@
 
 import React from 'react'
 import ReactDOM from 'react-dom'
-import ot from 'ot'
 import $ from 'jquery'
 
 import AceEditor from './editor-build'
 import Socket from './socket-build'
 import Loader from './loader-build'
+
+
+function random_string(length)  {
+    var text = "";
+    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+    for (var i = 0; i < length; i++)
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+    return text;
+}
 
 
 class Editor extends React.Component {
@@ -21,11 +31,13 @@ class Editor extends React.Component {
       name: null,
       type: null,
       access: null,
-      value: '',
+      value: null,
+      markers: {},
+      users: null,
       theme: 'solarized_light',
       fontSize: 12,
-      group_socket: null,
-      user_socket: null
+      cursor: {column: 0, row: 0},
+      id: random_string(32)
     };
     this.modes =  {
       py2: 'python',
@@ -36,30 +48,34 @@ class Editor extends React.Component {
 
   componentDidMount() {
     this.state.user = this.props.user;
-
-    this.state.group_socket = Socket.group_socket(
-      this.props.websocket_uri,
-      this.props.websocket_heartbeat,
-      (msg) => this.groupMessage(msg)
-    );
-    this.state.user_socket = Socket.user_socket(
-      this.props.websocket_uri,
-      this.props.websocket_heartbeat,
-      (msg) => this.userMessage(msg)
-    );
-
-    this.loadFile();
+    this.load();
   }
   
-  loadFile() {
+  load() {
     $.get(
-      '/disk/files/',
+      this.props.file_info_url,
       {file_id: this.props.file_id}
     ).done(
       (result) => this.gotFile(result)
     ).fail(
-      () => this.loadFile()
-    )
+      () => this.load()
+    );
+    
+    $.get(
+      this.props.file_context_url + this.props.file_id
+    ).done(
+      (result) => this.setState({value: result})
+    ).fail(
+      () => this.load()
+    );
+
+    $.get(
+      this.props.users_info_url
+    ).done(
+      (result) => this.setState({users: result})
+    ).fail(
+      () => this.load()
+    );
   }
 
   gotFile(files) {
@@ -69,24 +85,25 @@ class Editor extends React.Component {
         type: files[this.props.file_id].type,
         access: files[this.props.file_id].access
       });
+      
+      this.group_socket = Socket.group_socket(
+        this.props.websocket_uri,
+        this.props.file_id,
+        this.state.id,
+        (msg) => this.groupMessage(msg),
+        () => this.sendCursorState()
+      );
     } else {
       this.loadFile();
     }
   }
 
   getLoading() {
-    return !this.state.name;
+    return !this.state.name || this.state.value === null || this.state.users === null;
   }
 
   getType() {
     return this.modes[this.state.type];
-  }
-
-  handleChange(e) {
-    this.setState({
-      value: e.target.value
-    });
-    // console.log(e.target);
   }
 
   getAbsolutePos(pos) {
@@ -99,49 +116,163 @@ class Editor extends React.Component {
   }
 
   onChange(e) {
-    this.state.group_socket.send_message(JSON.stringify({
+    var full_change = e.lines.join('\n');
+
+    var data = {
       user: this.state.user,
       action: e.action,
       start: e.start,
       end: e.end,
-      change: e.lines.join('\n')
-    }));
-  };
+      change: full_change,
+      id: this.state.id
+    };
 
-  groupMessage(data) {
-    var parsed = JSON.parse(data);
-    var operation;
-
-    console.log('Group message', parsed);
-
-    if (!('action' in parsed)) {
-      return;
+    if (e.action == 'insert') {
+      this.setState({
+        value: this.insert(this.state.value, full_change, e.start)
+      });
+    } else if (e.action == 'remove') {
+      this.setState({
+        value: this.remove(this.state.value, e.start, e.end)
+      });
     }
 
-    if (parsed.action == 'insert') {
-      operation = new ot.TextOperation()
-        .retain(this.getAbsolutePos(parsed.start))
-        .insert(parsed.change)
-        .retain(this.state.value.length - this.getAbsolutePos(parsed.start));
-    } else if (parsed.action == 'remove') {
-      operation = new ot.TextOperation()
-        .retain(this.getAbsolutePos(parsed.start))
-        .delete(parsed.change)
-        .retain(this.state.value.length - this.getAbsolutePos(parsed.end));
+    this.group_socket.send(JSON.stringify(data));
+  };
+
+
+  insert(old, value, start) {
+    var lines = old.split('\n');
+    lines[start.row] = lines[start.row].slice(0, start.column) + value + lines[start.row].slice(start.column);
+    return lines.join('\n');
+  }
+
+
+  remove(old, start, end) {
+    var lines = old.split('\n');
+
+    if (start.row == end.row) {
+      lines[start.row] = lines[start.row].slice(0, start.column) + lines[start.row].slice(end.column);
+    } else {
+      lines[start.row] = lines[start.row].slice(0, start.column) + lines[end.row].slice(end.column);
+      lines = lines.slice(0, start.row + 1).concat(lines.slice(end.row + 1));
+    }
+
+    return lines.join('\n');
+  }
+
+  
+  onCursorChange(cursor) {
+    this.setState({
+      cursor: cursor
+    });
+
+    this.sendCursorState();
+  }
+
+  sendCursorState() {
+    var data = {
+      user: this.state.user,
+      id: this.state.id,
+      action: 'cursor',
+      end: this.state.cursor
+    };
+
+    if (this.group_socket.readyState == WebSocket.OPEN) {
+      this.group_socket.send(JSON.stringify(data));
+    }
+  }
+
+  comparePos(pos1, pos2) {
+    if (pos1.row == pos2.row) {
+      return pos1.col < pos2.col;
+    }
+    return pos1.row < pos2.row;
+  }
+
+  countNewLine(str) {
+    var res = 0;
+    for (var i = str.length - 1; i >= 0; --i) {
+      if (str[i] == '\n') {
+        ++res;
+      }
+    }
+    return res;
+  }
+
+  lastNewLine(str) {
+    for (var i = str.length - 1; i >= 0; --i) {
+      if (str[i] == '\n') {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  applyDiff(data) {
+    var row = this.state.cursor.row, column = this.state.cursor.column, updatedValue;
+
+    if (data.action == 'insert') {
+      updatedValue = this.insert(this.state.value, data.change, data.start);
+
+      if (this.comparePos(data.start, this.state.cursor)) {
+        if (this.state.cursor.row == data.end.row) {
+          var pos = this.lastNewLine(data.change);
+          if (pos == -1) {
+            column += data.change.length;
+          } else {
+            column += data.change.length - pos;
+          }
+        }
+        row += this.countNewLine(data.change);
+      }
+    } else if (data.action == 'remove') {
+      updatedValue = this.remove(this.state.value, data.start, data.end);
+
+      if (!this.comparePos(this.state.cursor, data.start)) {
+        if (this.comparePos(this.state.cursor, data.end)) {
+          row = data.start.row;
+          column = data.start.column;
+        } else {
+          if (this.state.cursor.row == data.end.row) {
+            column += data.start.column - data.end.column;
+          }
+          row -= this.countNewLine(data.change);
+        }
+      }
     } else {
       return;
     }
 
-    var updatedValue = operation.apply(this.state.value);
     this.setState({
-      value: updatedValue
+      value: updatedValue,
+      cursor: {row: row, column: column}
     });
   }
 
-  userMessage(data) {
+  groupMessage(data) {
     var parsed = JSON.parse(data);
 
-    console.log('User message', parsed);
+    if (!('action' in parsed) || parsed.id == this.state.id) {
+      return;
+    }
+
+    if (parsed.action == 'insert' || parsed.action == 'remove') {
+      this.applyDiff(parsed);
+    }
+
+    var markers = this.state.markers;
+    if (parsed.action != 'disconnect') {
+      markers[parsed.id] = {
+        username: this.state.users[parsed.user].username,
+        pos: parsed.end
+      };
+    } else {
+      delete markers[parsed.id];
+    }
+    this.setState({
+      markers: markers
+    });
   }
   
   render() {
@@ -154,8 +285,11 @@ class Editor extends React.Component {
           value={this.state.value}
           name="editor"
           onChange={(e) => this.onChange(e)}
-          group_socket={this.state.group_socket}
-          user_socket={this.state.user_socket}
+          cursor={this.state.cursor}
+          onCursorChange={(cursor) => this.onCursorChange(cursor)}
+          readOnly={this.state.access != 'edit'}
+          highlightActiveLine={true}
+          markers={this.state.markers}
         />
       </Loader>
     );
@@ -167,8 +301,10 @@ ReactDOM.render(
   <Editor
     user={$('#user').val()}
     file_id={$('#file_id').val()}
+    file_info_url="/disk/files/"
+    users_info_url="/disk/users/"
+    file_context_url="/ide/file_context/"
     websocket_uri={$('#websocket_uri').val()}
-    websocket_heartbeat={$('#websocket_heartbeat').val()}
   />,
   document.getElementById('root')
 );

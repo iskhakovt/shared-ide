@@ -9,26 +9,18 @@ import 'brace/theme/solarized_light'
 import 'brace/mode/python'
 import 'brace/mode/c_cpp'
 import 'brace/ext/language_tools'
+import _ from 'lodash'
+
+import deepCompare from './compare-build'
+
+var aceRange = ace.acequire('ace/range').Range;
 
 
 class AceEditor extends React.Component {
   constructor(props, context) {
     super(props, context);
     this.state = {
-      name: 'brace-editor',
-      mode: '',
-      theme: '',
-      defaultValue: '',
-      value: '',
-      fontSize: 12,
-      showGutter: true,
-      onLoad: null,
-      maxLines: null,
-      readOnly: false,
-      highlightActiveLine: true,
-      showPrintMargin: true,
-      selectFirstLine: false,
-      wrapEnabled: false
+      markers: []
     };
   }
 
@@ -45,6 +37,12 @@ class AceEditor extends React.Component {
     this.editor.setShowPrintMargin(this.props.setShowPrintMargin);
     this.editor.getSession().setUseWrapMode(this.props.wrapEnabled);
     this.editor.renderer.setShowGutter(this.props.showGutter);
+    
+    this.editor.getSelection().on(
+      'changeCursor',
+      (e, selection) => this.props.onCursorChange(selection.getCursor())
+    );
+    this.editor.getSelection().moveCursorToPosition(this.props.cursor);
 
     if (this.props.onChange) {
       this.editor.on('change', (e) => {
@@ -58,6 +56,8 @@ class AceEditor extends React.Component {
     if (this.props.onLoad) {
       this.props.onLoad(this.editor);
     }
+
+    this.updateMarkers(this.props.markers);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -97,6 +97,56 @@ class AceEditor extends React.Component {
     if (nextProps.showGutter !== this.props.showGutter) {
       this.editor.renderer.setShowGutter(nextProps.showGutter);
     }
+    
+    this.updateMarkers(nextProps.markers);
+
+    if (nextProps.onCursorChange !== this.props.onCursorChange) {
+      this.editor.getSelection().on(
+        'changeCursor',
+        (e, selection) => {
+          if (!deepCompare(selection.getCursor(), this.props.cursor)) {
+            nextProps.onCursorChange(selection.getCursor())
+          }
+        }
+      );
+    }
+    if (!deepCompare(nextProps.cursor, this.props.cursor)) {
+      this.editor.getSelection().moveCursorToPosition(nextProps.cursor);
+    }
+  }
+
+  updateMarkers(markers) {
+    _.forEach(
+      this.state.markers,
+      (marker_id) => this.editor.session.removeMarker(marker_id)
+    );
+
+    this.setState({
+      markers: _.map(
+        markers,
+        (value, key) => this.editor.session.addMarker(
+          new aceRange(
+            value.pos.row, value.pos.column, value.pos.row, value.pos.column + value.username.length
+          ),
+          key,
+          true
+        )
+      )
+    });
+
+    // That is awful, I know
+    _.map(markers, (value, key) => {
+      var style = document.head.appendChild(document.createElement('style'));
+      style.innerHTML = '.' + key + '{ position: absolute; ' +
+        'background: + rgba(100,100,200,0.5); z-index: 40;' +
+        'width: 2px !important; }';
+
+      var styleBefore = document.head.appendChild(document.createElement('style'));
+      styleBefore.innerHTML = '.' + key + '::before{ position: absolute; ' +
+        'background: rgba(100,100,200,0.5); z-index: 999; top: -100%;' +
+        'left: 0px; font-family: Arial; padding: 1px 2px;' +
+        'content: "' + value.username + '";}';
+    });
   }
 
   render() {

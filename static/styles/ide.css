@@ -15,3 +15,9 @@ html, body {
   bottom: 0;
   left: 0;
 }
+
+.header-center {
+  vertical-align: middle;
+  height: 19px;
+  margin-top: 5pt;
+}

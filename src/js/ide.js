@@ -6,11 +6,17 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import $ from 'jquery'
+import { Button } from 'react-bootstrap'
 
 import AceEditor from './editor-build'
 import Socket from './socket-build'
 import Loader from './loader-build'
+import EditPermissions from './edit_permissions-build'
+import csrf from './csrf-build'
 import deepCompare from './compare-build'
+
+
+csrf($);
 
 
 function random_string(length)  {
@@ -49,7 +55,8 @@ class Editor extends React.Component {
       fontSize: 12,
       id: random_string(32),
       op_pull: [],
-      op: null
+      op: null,
+      show_permissions: false
     };
     this.modes =  {
       py2: 'python',
@@ -323,23 +330,64 @@ class Editor extends React.Component {
   
   render() {
     return (
-      <Loader loading={this.getLoading()}>
-        <AceEditor
-          mode={this.getType()}
-          theme={this.state.theme}
-          fontSize={this.state.fontSize}
-          value={this.state.value}
-          name="editor"
-          showGutter={true}
-          showLineNumbers={true}
-          onChange={(e) => this.onChange(e)}
-          cursor={this.cursor}
-          onCursorChange={(cursor) => this.onCursorChange(cursor)}
-          readOnly={this.state.access != 'edit'}
-          highlightActiveLine={true}
-          markers={this.state.markers}
-        />
-      </Loader>
+      <div>
+        <nav className="navbar navbar-default navbar-static-top">
+          <div className="container">
+            <div className="navbar-header">
+              <a className="navbar-brand">Shared IDE</a>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+              <ul className="nav navbar-nav">
+                <li className="header-center">
+                  <ol className="breadcrumb">
+                    <li><a href="/disk/">Home</a></li>
+                    <li className="active">{this.state.name + '.' + this.state.type}</li>
+                  </ol>
+                </li>
+                <li>
+                  <Button
+                    type="button"
+                    className="btn btn-default navbar-btn"
+                    onClick={() => this.setState({show_permissions: true})}
+                  >
+                    Edit permissions
+                  </Button>
+                  <EditPermissions
+                    show={this.state.show_permissions}
+                    files={[this.props.file_id]}
+                    users={this.state.users}
+                    user_id={this.props.user}
+                    url={this.props.edit_permissions_url}
+                    get_permissions_url={this.props.get_permissions_url}
+                    onClose={() => this.setState({ show_permissions: false })}
+                  />
+                </li>
+              </ul>
+              <ul className="nav navbar-nav navbar-right">
+                <li className="active"><a>{ this.state.users ? this.state.users[this.state.user].username : '' }</a></li>
+                <li><a href="/accounts/logout/?next=/">Logout</a></li>
+              </ul>
+            </div>
+          </div>
+        </nav>
+        <Loader loading={this.getLoading()}>
+          <AceEditor
+            mode={this.getType()}
+            theme={this.state.theme}
+            fontSize={this.state.fontSize}
+            value={this.state.value}
+            name="editor"
+            showGutter={true}
+            showLineNumbers={true}
+            onChange={(e) => this.onChange(e)}
+            cursor={this.cursor}
+            onCursorChange={(cursor) => this.onCursorChange(cursor)}
+            readOnly={this.state.access != 'edit'}
+            highlightActiveLine={true}
+            markers={this.state.markers}
+          />
+        </Loader>
+      </div>
     );
   };
 }
@@ -352,6 +400,8 @@ ReactDOM.render(
     file_info_url="/disk/files/"
     users_info_url="/disk/users/"
     file_context_url="/ide/file_context/"
+    edit_permissions_url="/disk/edit_permissions/"
+    get_permissions_url="/disk/permissions/"
     websocket_uri={$('#websocket_uri').val()}
   />,
   document.getElementById('root')

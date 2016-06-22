@@ -10,7 +10,11 @@ import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table';
 import { Alert, Button, ControlLabel, FormControl, FormGroup, Label, Modal } from 'react-bootstrap';
 
 import Loader from './loader-build'
+import csrf from './csrf-build'
 import deepCompare from './compare-build'
+
+
+csrf($);
 
 
 function clone(obj) {
@@ -59,6 +63,10 @@ class EditPermissions extends React.Component {
   }
 
   gotUsers(users, user_id) {
+    if (users == null) {
+      users = [];
+    }
+
     var users_copy = clone(users);
     delete users_copy[user_id];
 
@@ -82,6 +90,10 @@ class EditPermissions extends React.Component {
   }
   
   updateFiles(files) {
+    if (files == null) {
+      files = [];
+    }
+
     this.setState({
       permissions: {}
     });

@@ -99,6 +99,6 @@ HASH_PATH = 'js_build_hash.json'
 
 JS_FILES = [
     ['disk.js', 'new_file.js', 'edit_permissions.js', 'compare.js', 'loader.js', 'csrf.js'],
-    ['editor.js', 'ide.js', 'socket.js', 'compare.js', 'loader.js'],
+    ['editor.js', 'ide.js', 'socket.js', 'compare.js', 'loader.js', 'edit_permissions.js'],
     ['auth.js', 'csrf.js'],
 ]

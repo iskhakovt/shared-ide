@@ -17,20 +17,6 @@
     <input type="hidden" id="file_id" value="{{ file.id }}" />
     <input type="hidden" id="websocket_uri" value="{{ WEBSOCKET_URI }}" />
 
-    <nav class="navbar navbar-default navbar-static-top">
-      <div class="container">
-        <div class="navbar-header">
-          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand">Shared IDE</a>
-        </div>
-      </div>
-    </nav>
-
     <div id="root"></div>
 
     <script src="{% static "ide.js" %}" type="text/javascript" charset="utf-8"></script>

@@ -139,17 +139,14 @@ def edit_permissions(request):
     if person.pk == file.creator.pk:
         HttpResponseBadRequest()
 
-    view_instance = person.view.filter(pk=file.pk)
-    if view_instance:
-        view_instance.delete()
-    edit_instance = person.view.filter(pk=file.pk)
-    if edit_instance:
-        edit_instance.delete()
+    file.editors.remove(person)
+    file.viewers.remove(person)
 
     if request.POST['access'] == 'view':
         file.viewers.add(person)
     if request.POST['access'] == 'edit':
         file.editors.add(person)
+    file.save()
 
     return HttpResponse()
 

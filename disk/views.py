@@ -137,7 +137,7 @@ def edit_permissions(request):
     person = Person.objects.get(user=get_object_or_404(User, pk=request.POST['user_id']))
 
     if person.pk == file.creator.pk:
-        HttpResponseBadRequest()
+        return HttpResponseBadRequest()
 
     file.editors.remove(person)
     file.viewers.remove(person)

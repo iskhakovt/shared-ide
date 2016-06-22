@@ -134,6 +134,10 @@ def ws_disconnect(message, document, id):
         'action': 'disconnect',
         'id': id
     })})
+    Group(message.channel_session['room'].replace('edit', 'view')).send({'text': json.dumps({
+        'action': 'disconnect',
+        'id': id
+    })})
 
     if editor.sessions == 0:
         update_file(editor)

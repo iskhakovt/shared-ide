@@ -14,8 +14,6 @@ npm install
 
 ## Running
 ```bash
-# Parallel tasks
 redis-server
-./manage.py celery -A shared_ide worker
 ./manage.py runserver
 ```

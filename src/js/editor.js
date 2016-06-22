@@ -20,7 +20,8 @@ class AceEditor extends React.Component {
   constructor(props, context) {
     super(props, context);
     this.state = {
-      markers: []
+      markers: {},
+      cursor: null
     };
   }
 
@@ -37,10 +38,15 @@ class AceEditor extends React.Component {
     this.editor.setShowPrintMargin(this.props.setShowPrintMargin);
     this.editor.getSession().setUseWrapMode(this.props.wrapEnabled);
     this.editor.renderer.setShowGutter(this.props.showGutter);
+    this.editor.setOption('showLineNumbers', this.props.showLineNumbers);
+
+    this.state.cursor = this.props.cursor;
     
     this.editor.getSelection().on(
       'changeCursor',
-      (e, selection) => this.props.onCursorChange(selection.getCursor())
+      (e, selection) => {
+        if (selection.getCursor().row || selection.getCursor().column)
+          this.props.onCursorChange(selection.getCursor()); }
     );
     this.editor.getSelection().moveCursorToPosition(this.props.cursor);
 
@@ -98,55 +104,74 @@ class AceEditor extends React.Component {
       this.editor.renderer.setShowGutter(nextProps.showGutter);
     }
     
+    if (nextProps.showLineNumbers !== this.props.showLineNumbers) {
+      this.editor.setOption('showLineNumbers', nextProps.showLineNumbers);
+    }
+    
     this.updateMarkers(nextProps.markers);
 
     if (nextProps.onCursorChange !== this.props.onCursorChange) {
       this.editor.getSelection().on(
         'changeCursor',
         (e, selection) => {
-          if (!deepCompare(selection.getCursor(), this.props.cursor)) {
+          if (!deepCompare(selection.getCursor(), nextProps.cursor)) {
             nextProps.onCursorChange(selection.getCursor())
           }
         }
       );
     }
-    if (!deepCompare(nextProps.cursor, this.props.cursor)) {
+    if (!deepCompare(nextProps.cursor, this.state.cursor) &&
+       !deepCompare(nextProps.cursor, this.editor.getSelection().getCursor())) {
+      this.setState({cursor: nextProps.cursor});
       this.editor.getSelection().moveCursorToPosition(nextProps.cursor);
     }
   }
 
   updateMarkers(markers) {
+    var newMarkers = {};
+    var toPush = false;
+
     _.forEach(
-      this.state.markers,
-      (marker_id) => this.editor.session.removeMarker(marker_id)
+      markers,
+      (value, key) => {
+        if (!(key in this.state.markers) ||
+            !deepCompare(value, this.state.markers[key].value)) {
+          toPush = true;
+
+          if (key in this.state.markers) {
+            this.editor.session.removeMarker(this.state.markers[key].id);
+          }
+          var id = this.editor.session.addMarker(
+            new aceRange(
+              value.pos.row, value.pos.column, value.pos.row, value.pos.column + value.username.length
+            ),
+            key,
+            true
+          );
+
+          newMarkers[key] = {id: id, value: value};
+
+          // That is awful, I know
+
+          var style = document.head.appendChild(document.createElement('style'));
+          style.innerHTML = '.' + key + '{ position: absolute; ' +
+            'background: + rgba(100,100,200,0.5); z-index: 40;' +
+            'width: 2px !important; }';
+
+          var styleBefore = document.head.appendChild(document.createElement('style'));
+          styleBefore.innerHTML = '.' + key + '::before{ position: absolute; ' +
+            'background: rgba(100,100,200,0.5); z-index: 999; top: -100%;' +
+            'left: 0px; font-family: Arial; padding: 1px 2px;' +
+            'content: "' + value.username + '";}';
+        }
+      }
     );
 
-    this.setState({
-      markers: _.map(
-        markers,
-        (value, key) => this.editor.session.addMarker(
-          new aceRange(
-            value.pos.row, value.pos.column, value.pos.row, value.pos.column + value.username.length
-          ),
-          key,
-          true
-        )
-      )
-    });
-
-    // That is awful, I know
-    _.map(markers, (value, key) => {
-      var style = document.head.appendChild(document.createElement('style'));
-      style.innerHTML = '.' + key + '{ position: absolute; ' +
-        'background: + rgba(100,100,200,0.5); z-index: 40;' +
-        'width: 2px !important; }';
-
-      var styleBefore = document.head.appendChild(document.createElement('style'));
-      styleBefore.innerHTML = '.' + key + '::before{ position: absolute; ' +
-        'background: rgba(100,100,200,0.5); z-index: 999; top: -100%;' +
-        'left: 0px; font-family: Arial; padding: 1px 2px;' +
-        'content: "' + value.username + '";}';
-    });
+    if (toPush) {
+      this.setState({
+        markers: newMarkers
+      });
+    }
   }
 
   render() {

@@ -215,6 +215,7 @@ class Disk extends React.Component {
 
   render() {
     var height = this.props.height;
+    var buttons_class;
 
     var notify;
     if (this.state.warning_text) {
@@ -228,13 +229,17 @@ class Disk extends React.Component {
       height -= 205;
     }
 
+    if (this.props.width > 1000) {
+      buttons_class = 'one-row-btn-group'
+    }
+
     return (
       <Loader loading={this.getLoading()}>
         <div className="row">
           {notify}
         </div>
-        <div className="row">
-          <ButtonGroup role="group" aria-label="edit-files">
+        <row>
+          <ButtonGroup role="group" aria-label="edit-files" className={buttons_class}>
             <Button onClick={() => this.newFile()}>
               New file
             </Button>
@@ -303,7 +308,7 @@ class Disk extends React.Component {
               dataField="last_modified" dataSort={true} width="200"
             >Last modified</TableHeaderColumn>
           </BootstrapTable>
-        </div>
+        </row>
       </Loader>
     );
   };

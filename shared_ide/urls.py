@@ -3,12 +3,16 @@
 
 from django.conf.urls import url, include
 from django.contrib import admin
+
 from disk import views as disk_views
 from ide import views as ide_views
+from ide.consumers import on_start
 from shared_ide import js_transform
 
 
 admin.site.site_header = 'Shared IDE administration'
+
+on_start()
 
 js_transform.build_jsx()
 

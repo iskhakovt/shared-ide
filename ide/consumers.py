@@ -13,6 +13,18 @@ from disk.models import File, Person
 from ide.models import Editor, EditOperation
 
 
+def on_start():
+    for editor in Editor.objects.all():
+        update_file(editor)
+
+
+def update_file(editor):
+    editor.file.file = editor.file_content
+    editor.last_modified = editor.last_modified
+    editor.file.save()
+    editor.delete()
+
+
 def insert(old, value, start_row, start_column):
     lines = old.split('\n')
     lines[start_row] = lines[start_row][:start_column] + value + lines[start_row][start_column:]
@@ -90,6 +102,9 @@ def ws_connect(message, document, id):
         message.channel_session['room'] = editor.file.ws_group + 'edit'
     elif file.viewers.filter(pk=person.pk):
         message.channel_session['room'] = editor.file.ws_group + 'view'
+    else:
+        return
+
     editor.sessions += 1
     editor.save()
 
@@ -99,10 +114,9 @@ def ws_connect(message, document, id):
 @channel_session_user
 def ws_message(message, document, id):
     if message.channel_session['room'].find('edit') != -1:
-        perform_operation(document, message['text'])
-
         Group(message.channel_session['room']).send({'text': message['text']})
         Group(message.channel_session['room'].replace('edit', 'view')).send({'text': message['text']})
+        perform_operation(document, message['text'])
 
 
 @channel_session_user
@@ -114,13 +128,12 @@ def ws_disconnect(message, document, id):
     editor.sessions -= 1
     editor.save()
 
+    Group(message.channel_session['room']).discard(message.reply_channel)
+
     Group(message.channel_session['room']).send({'text': json.dumps({
         'action': 'disconnect',
         'id': id
     })})
 
     if editor.sessions == 0:
-        file.file = editor.file_content
-        file.last_modified = editor.last_modified
-        file.save()
-        editor.delete()
+        update_file(editor)

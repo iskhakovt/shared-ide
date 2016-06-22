@@ -10,6 +10,7 @@ import $ from 'jquery'
 import AceEditor from './editor-build'
 import Socket from './socket-build'
 import Loader from './loader-build'
+import deepCompare from './compare-build'
 
 
 function random_string(length)  {
@@ -20,6 +21,16 @@ function random_string(length)  {
         text += possible.charAt(Math.floor(Math.random() * possible.length));
 
     return text;
+}
+
+
+function clone(obj) {
+  if (null == obj || "object" != typeof obj) return obj;
+  var copy = obj.constructor();
+  for (var attr in obj) {
+    if (obj.hasOwnProperty(attr)) copy[attr] = obj[attr];
+  }
+  return copy;
 }
 
 
@@ -36,14 +47,18 @@ class Editor extends React.Component {
       users: null,
       theme: 'solarized_light',
       fontSize: 12,
-      cursor: {column: 0, row: 0},
-      id: random_string(32)
+      id: random_string(32),
+      op_pull: [],
+      op: null
     };
     this.modes =  {
       py2: 'python',
       py3: 'python',
       cpp: 'c_cpp'
     };
+
+    this.cursor = {column: 0, row: 0};
+    this.last_send = null;
   }
 
   componentDidMount() {
@@ -140,13 +155,12 @@ class Editor extends React.Component {
     this.group_socket.send(JSON.stringify(data));
   };
 
-
   insert(old, value, start) {
     var lines = old.split('\n');
+
     lines[start.row] = lines[start.row].slice(0, start.column) + value + lines[start.row].slice(start.column);
     return lines.join('\n');
   }
-
 
   remove(old, start, end) {
     var lines = old.split('\n');
@@ -161,22 +175,28 @@ class Editor extends React.Component {
     return lines.join('\n');
   }
 
-  
   onCursorChange(cursor) {
-    this.setState({
-      cursor: cursor
-    });
-
-    this.sendCursorState();
+    if (!deepCompare(cursor, this.cursor)) {
+      this.cursor = clone(cursor);
+      this.sendCursorState();
+    }
   }
 
   sendCursorState() {
+    if (this.last_send &&
+        this.last_send.action == 'cursor' &&
+        deepCompare(this.last_send.end, this.cursor)) {
+      return;
+    }
+
     var data = {
       user: this.state.user,
       id: this.state.id,
       action: 'cursor',
-      end: this.state.cursor
+      end: this.cursor
     };
+
+    this.last_send = data;
 
     if (this.group_socket.readyState == WebSocket.OPEN) {
       this.group_socket.send(JSON.stringify(data));
@@ -210,13 +230,13 @@ class Editor extends React.Component {
   }
 
   applyDiff(data) {
-    var row = this.state.cursor.row, column = this.state.cursor.column, updatedValue;
+    var row = this.cursor.row, column = this.cursor.column, updatedValue;
 
     if (data.action == 'insert') {
       updatedValue = this.insert(this.state.value, data.change, data.start);
 
-      if (this.comparePos(data.start, this.state.cursor)) {
-        if (this.state.cursor.row == data.end.row) {
+      if (this.comparePos(data.start, this.cursor)) {
+        if (this.cursor.row == data.end.row) {
           var pos = this.lastNewLine(data.change);
           if (pos == -1) {
             column += data.change.length;
@@ -229,12 +249,12 @@ class Editor extends React.Component {
     } else if (data.action == 'remove') {
       updatedValue = this.remove(this.state.value, data.start, data.end);
 
-      if (!this.comparePos(this.state.cursor, data.start)) {
-        if (this.comparePos(this.state.cursor, data.end)) {
+      if (!this.comparePos(this.cursor, data.start)) {
+        if (this.comparePos(this.cursor, data.end)) {
           row = data.start.row;
           column = data.start.column;
         } else {
-          if (this.state.cursor.row == data.end.row) {
+          if (this.cursor.row == data.end.row) {
             column += data.start.column - data.end.column;
           }
           row -= this.countNewLine(data.change);
@@ -250,6 +270,44 @@ class Editor extends React.Component {
     });
   }
 
+  applyMarkers(data) {
+    var markers = this.state.markers;
+    if (data.action != 'disconnect') {
+      markers[data.id] = {
+        username: this.state.users[data.user].username,
+        pos: data.end
+      };
+    } else {
+      delete markers[data.id];
+    }
+    this.setState({
+      markers: markers
+    });
+  }
+
+  tryApply(from_op) {
+    if (!this.state.op_pull.length || (!from_op && this.state.op)) {
+      if (from_op) {
+        this.setState({
+          op: null
+        });
+      }
+      return;
+    }
+
+    this.setState({
+      op: this.state.op_pull[0],
+      op_pull: this.state.op_pull.slice(1)
+    });
+
+    if (this.state.op.action == 'insert' || this.state.op.action == 'remove') {
+      this.applyDiff(this.state.op);
+    }
+    this.applyMarkers(this.state.op);
+
+    this.tryApply(true);
+  }
+
   groupMessage(data) {
     var parsed = JSON.parse(data);
 
@@ -257,22 +315,10 @@ class Editor extends React.Component {
       return;
     }
 
-    if (parsed.action == 'insert' || parsed.action == 'remove') {
-      this.applyDiff(parsed);
-    }
-
-    var markers = this.state.markers;
-    if (parsed.action != 'disconnect') {
-      markers[parsed.id] = {
-        username: this.state.users[parsed.user].username,
-        pos: parsed.end
-      };
-    } else {
-      delete markers[parsed.id];
-    }
     this.setState({
-      markers: markers
+      op_pull: this.state.op_pull.concat([parsed])
     });
+    this.tryApply(false);
   }
   
   render() {
@@ -284,8 +330,10 @@ class Editor extends React.Component {
           fontSize={this.state.fontSize}
           value={this.state.value}
           name="editor"
+          showGutter={true}
+          showLineNumbers={true}
           onChange={(e) => this.onChange(e)}
-          cursor={this.state.cursor}
+          cursor={this.cursor}
           onCursorChange={(cursor) => this.onCursorChange(cursor)}
           readOnly={this.state.access != 'edit'}
           highlightActiveLine={true}
